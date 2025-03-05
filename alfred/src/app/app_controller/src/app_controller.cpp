@@ -30,9 +30,9 @@ LifecycleCallbackReturn_t Controller::on_configure(
   const rclcpp_lifecycle::State & previous_state)
 {
   imuSubscriber = this->create_subscription<ImuDataMsg_t>(
-    "imuData", 10, std::bind(&Controller::imuDataReader, this, _1));
+    "imuData", 10, std::bind(&Controller::imuDataReader, this, _1));  // TODO(arnix): temporary
   odometrySubscriber = this->create_subscription<OdometryMsg_t>(
-    "cmd_velocity", 10, std::bind(&Controller::odometryReader, this, _1));
+    "odometry", 10, std::bind(&Controller::odometryReader, this, _1));
 
   twistPublisher = this->create_publisher<TwistMsg_t>("cmd_velocity", 10);
 
