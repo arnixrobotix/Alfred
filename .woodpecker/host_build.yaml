@@ -1,0 +1,54 @@
+when:
+  - event: push
+    branch: ros2
+
+steps:
+  - name: Build Alfred
+    image: ros:humble-ros-base-jammy
+    commands:
+      - cd alfred
+      - rm -fR src/sim/
+      - . /opt/ros/$ROS_DISTRO/setup.sh
+      - apt-get update 
+      - rosdep install -y
+        --from-paths src
+        --ignore-src
+      - colcon build
+        --symlink-install
+        --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DSYNTHETIC_BUILD:BOOL=ON
+        --no-warn-unused-cli
+
+  - name: Archive Alfred's build logs
+    image: alpine:latest
+    commands:
+      - cd alfred/log/latest_build/
+      - find -type f -print | tar -czf build_logs.tar.gz --no-recursion -T -
+    when:
+      status: [failure]
+    depends_on:
+      - Build Alfred
+
+  - name: Test Alfred
+    image: ros:humble-ros-base-jammy
+    commands:
+      - cd alfred
+      - rm -fR src/sim/
+      - . /opt/ros/$ROS_DISTRO/setup.sh
+      - apt-get update 
+      - rosdep install -y
+        --from-paths src
+        --ignore-src
+      - colcon test
+      - colcon test-result
+    depends_on:
+      - Build Alfred
+
+  - name: Archive Alfred's tests logs
+    image: alpine:latest
+    commands:
+      - cd alfred/log/latest_test/
+      - find -type f -print | tar -czf tests_logs.tar.gz --no-recursion -T -
+    when:
+      status: [failure, success]
+    depends_on:
+      - Test Alfred
