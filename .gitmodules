@@ -1,3 +1,0 @@
-[submodule "alfred/src/sim/ros_gz"]
-	path = alfred/src/sim/ros_gz
-	url = https://github.com/gazebosim/ros_gz.git
