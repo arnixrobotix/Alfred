@@ -283,7 +283,7 @@ steps:
     - name: target_files
       path: /tmp/target_files
   settings:
-    hosts: [ "192.168.5.253" ]
+    hosts: [ "192.168.3.253" ]
     port: 22
     source: /tmp/target_files/
     target: ~/Alfred/
