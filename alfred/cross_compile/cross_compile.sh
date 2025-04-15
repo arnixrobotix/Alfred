@@ -11,7 +11,6 @@ rosdep install -ry \
     --from-paths src \
     --ignore-src
 
-colcon build --packages-skip-regex ros_gz \
-             --symlink-install \
+colcon build --symlink-install \
              --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
              --no-warn-unused-cli
