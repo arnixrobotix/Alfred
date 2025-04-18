@@ -81,20 +81,7 @@ TEST_F(PoseManagerActivatedTest, WheelsVelocityCmdPublished)
   ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.left, TWIST_COMMAND_1_M_PER_S);
 }
 
-TEST_F(PoseManagerActivatedTest, NullVelocityOdometryPublished)
-{
-  HalMotorControlEncodersMsg_t encoderCountFirstMessage;
-  encoderCountFirstMessage.header.stamp.nanosec = 0;
-  encoderCountFirstMessage.motor_left_encoder_count = 520;
-  encoderCountFirstMessage.motor_right_encoder_count = 520;
-
-  poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
-  executorPoseManager.spin_some();
-
-  ASSERT_NEAR(poseManagerChecker->odometry.twist.linear.x, 0.0, 1e-3);
-}
-
-TEST_F(PoseManagerActivatedTest, PositiveVelocityOdometryPublished)
+TEST_F(PoseManagerActivatedTest, PositiveXPositionOdometryPublished)
 {
   HalMotorControlEncodersMsg_t encoderCountFirstMessage;
   encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
@@ -104,10 +91,11 @@ TEST_F(PoseManagerActivatedTest, PositiveVelocityOdometryPublished)
   poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
   executorPoseManager.spin_some();
 
-  ASSERT_NEAR(poseManagerChecker->odometry.twist.linear.x, 1.0, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.01, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-3);
 }
 
-TEST_F(PoseManagerActivatedTest, PositiveVelocityOdometryPublishedTwoMessages)
+TEST_F(PoseManagerActivatedTest, PositiveXPositionOdometryPublishedTwoMessages)
 {
   HalMotorControlEncodersMsg_t encoderCountFirstMessage;
   encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
@@ -122,15 +110,17 @@ TEST_F(PoseManagerActivatedTest, PositiveVelocityOdometryPublishedTwoMessages)
   poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
   executorPoseManager.spin_some();
 
-  EXPECT_NEAR(poseManagerChecker->odometry.twist.linear.x, 1.0, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.01, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-3);
 
   poseManager->computeAndPublishOdometry(encoderCountSecondMessage);
   executorPoseManager.spin_some();
 
-  ASSERT_NEAR(poseManagerChecker->odometry.twist.linear.x, 2.0, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.03, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-3);
 }
 
-TEST_F(PoseManagerActivatedTest, NegativeVelocityOdometryPublished)
+TEST_F(PoseManagerActivatedTest, NegativeXPositionOdometryPublished)
 {
   HalMotorControlEncodersMsg_t encoderCountFirstMessage;
   encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
@@ -140,7 +130,22 @@ TEST_F(PoseManagerActivatedTest, NegativeVelocityOdometryPublished)
   poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
   executorPoseManager.spin_some();
 
-  ASSERT_NEAR(poseManagerChecker->odometry.twist.linear.x, -1.0, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, -0.01, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-4);
+}
+
+TEST_F(PoseManagerActivatedTest, XYPositionOdometryPublished)
+{
+  HalMotorControlEncodersMsg_t encoderCountFirstMessage;
+  encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
+  encoderCountFirstMessage.motor_left_encoder_count = 12240;
+  encoderCountFirstMessage.motor_right_encoder_count = 0;
+
+  poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
+  executorPoseManager.spin_some();
+
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.083, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, -0.083, 1e-3);
 }
 
 }  // namespace test

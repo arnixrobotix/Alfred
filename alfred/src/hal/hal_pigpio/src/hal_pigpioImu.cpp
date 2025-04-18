@@ -79,7 +79,7 @@ void Pigpio::readQuaternionData(void)
   char fifoData[MPU6050_DMP_FIFO_QUAT_SIZE];
 
   if (isFifoOverflowed()) {
-    RCLCPP_ERROR(get_logger(), "FIFO has overflowed!");
+    RCLCPP_ERROR(get_logger(), "FIFO overflew!");
     resetFifo();
   } else {
     fifoCount = readFifoCount();
@@ -109,6 +109,7 @@ void Pigpio::computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE])
 {
   prev_quaternion = quaternion_;
 
+  // Cf TDK Invensense firmware code
   quaternion_.w =
     static_cast<double>((static_cast<int32_t>(data[0]) <<
     24) |
@@ -136,6 +137,8 @@ void Pigpio::computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE])
 
 void Pigpio::computeAngularVelocities(Vector3Msg_t & angularVelocities)
 {
+  // Cf https://mariogc.com/post/angular-velocity-quaternions/
+
   auto delta = (timestamp - prev_timestamp).seconds();
 
   angularVelocities.x = 2.0 / delta * (prev_quaternion.w * quaternion_.x -
@@ -167,6 +170,10 @@ void Pigpio::publishImuMessage()
   auto linearAcceleration = Vector3Msg_t();
   auto header = HeaderMsg_t();
 
+  // Body frame: X axis is oriented to the front of the robot
+  //             Y axis is oriented to the left of the robot
+  //             Z axis is completing the orthogonal coordinates system
+  // This frame is attached to the body of the robot, hence no movements happen in it.
   header.frame_id = "Body";
   header.stamp = rclcpp::Clock().now();
   message.header = header;

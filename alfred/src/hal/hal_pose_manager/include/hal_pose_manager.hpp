@@ -24,6 +24,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "geometry_msgs/msg/point.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "hal_motor_control_interfaces/msg/hal_motor_control_encoders.hpp"
@@ -35,11 +36,16 @@ namespace pose_manager
 {
 
 #define EC_PER_NS_TO_M_PER_S 19231  // 52EC = 1mm
+// 360 EC per motor revolution, reduction ratio of 34 => 360 * 34 = 12240 EC per wheel revolution
+constexpr double EncoderCountToRadians = 2.0 * M_PI / 12240.0;
+constexpr double wheelRadius_m = 0.0375;
+constexpr double robotWidth_m = 0.15;
 
 using ImuDataMsg_t = sensor_msgs::msg::Imu;
 using OdometryMsg_t = nav_msgs::msg::Odometry;
 using QuaternionMsg_t = geometry_msgs::msg::Quaternion;
 using Vector3Msg_t = geometry_msgs::msg::Vector3;
+using PointMsg_t = geometry_msgs::msg::Point;
 using PoseMsg_t = geometry_msgs::msg::PoseWithCovariance;
 using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
 using HeaderMsg_t = std_msgs::msg::Header;
@@ -61,6 +67,13 @@ struct WheelsVelocity
   double left;
 };
 
+struct Point
+{
+  double x;
+  double y;
+  double z;
+};
+
 class HalPoseManager : public rclcpp_lifecycle::LifecycleNode
 {
 private:
@@ -75,6 +88,8 @@ private:
   WheelsVelocity wheelsVelocity;
   QuaternionMsg_t orientation;
   Vector3Msg_t angularVelocity;
+  Point position_;
+  Point prev_position;
 
 public:
   HalPoseManager();

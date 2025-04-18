@@ -28,7 +28,9 @@ HalPoseManager::HalPoseManager()
     .timestampNs = 0},
   wheelsVelocity{.right = 0.0, .left = 0.0},
   orientation{QuaternionMsg_t()},
-  angularVelocity{Vector3Msg_t()}
+  angularVelocity{Vector3Msg_t()},
+  position_{0.0, 0.0, 0.0},
+  prev_position{0.0, 0.0, 0.0}
 {
 }
 
@@ -125,38 +127,48 @@ void HalPoseManager::computeAndPublishOdometry(const HalMotorControlEncodersMsg_
   auto odometry = OdometryMsg_t();
   auto pose = PoseMsg_t();
   auto twist = TwistMsg_t();
+  auto position = PointMsg_t();
 
-  int32_t encoderCountDelta = 0;
-  int32_t timeDelta = msg.header.stamp.nanosec - encodersCount.timestampNs;
-  encodersCount.timestampNs = msg.header.stamp.nanosec;
-
-  auto computeVelocity = [](int32_t encoderCountDelta, int32_t timeDelta) {
-      return static_cast<double>(encoderCountDelta) * EC_PER_NS_TO_M_PER_S / timeDelta;
-    };
+  int32_t encoderCountDeltaLeft = 0;
+  int32_t encoderCountDeltaRight = 0;
 
   encodersCount.leftPrevious = encodersCount.leftCurrrent;
   encodersCount.leftCurrrent = msg.motor_left_encoder_count;
+  encoderCountDeltaLeft = encodersCount.leftCurrrent - encodersCount.leftPrevious;
 
   encodersCount.rightPrevious = encodersCount.rightCurrrent;
   encodersCount.rightCurrrent = msg.motor_right_encoder_count;
+  encoderCountDeltaRight = encodersCount.rightCurrrent - encodersCount.rightPrevious;
 
-  if (timeDelta != 0) {
-    encoderCountDelta = encodersCount.leftCurrrent - encodersCount.leftPrevious;
-    wheelsVelocity.left = computeVelocity(encoderCountDelta, timeDelta);
-
-    encoderCountDelta = encodersCount.rightCurrrent - encodersCount.rightPrevious;
-    wheelsVelocity.right = computeVelocity(encoderCountDelta, timeDelta);
-  }
-
-  twist.twist.linear.x = wheelsVelocity.right;
-  twist.twist.angular = angularVelocity;
+  // Robot frame: X axis is oriented to the front of the robot
+  //              Y axis is colinear to the axis of the wheels
+  //              Z axis is vertical up
+  // This frame is attached to the motors, so only the pendulum movement happens in it,
+  // i.e. the rotation of the body around the axis of the motors
+  twist.twist.angular.y = angularVelocity.y;
   odometry.twist = std::move(twist);
 
+  double theta = wheelRadius_m / (2.0 * robotWidth_m) *
+    (encoderCountDeltaRight - encoderCountDeltaLeft) * EncoderCountToRadians;
+  double deltaX = wheelRadius_m / 2.0 * std::cos(theta) *
+    (encoderCountDeltaRight + encoderCountDeltaLeft) * EncoderCountToRadians;
+  double deltaY = wheelRadius_m / 2.0 * std::sin(theta) *
+    (encoderCountDeltaRight + encoderCountDeltaLeft) * EncoderCountToRadians;
+
+  position_.x = prev_position.x + deltaX;
+  position_.y = prev_position.y + deltaY;
+  prev_position = position_;
+
+  position.x = position_.x;
+  position.y = position_.y;
+  pose.pose.position = position;
+
+  // Orientation from IMU is already expressed in World frame
   pose.pose.orientation = orientation;
-  odometry.child_frame_id = "Body";
+  odometry.child_frame_id = "Robot";
   odometry.pose = std::move(pose);
 
-  header.frame_id = "Body";
+  header.frame_id = "World";
   header.stamp = rclcpp::Clock().now();
   odometry.header = std::move(header);
 
