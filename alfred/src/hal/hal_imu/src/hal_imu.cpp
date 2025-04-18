@@ -513,24 +513,5 @@ void Imu::imuForwarder(const ImuDataMsg_t & msg)
   imuDataPublisher->publish(imuData);
 }
 
-/* TODO(Arnix) To be moved in an app package
-void Imu::computeAngularVelAndLinearAcc()
-{
-  // phi (sensor's x-axis rotation)
-  float tanPhi = 2 * (quaternions.y * quaternions.z - quaternions.w * quaternions.x);
-  float quadrantPhi = 2 * (quaternions.w * quaternions.w + quaternions.z * quaternions.z) - 1;
-  angles.phi = std::atan2(tanPhi, quadrantPhi) * 180 / M_PI;
-
-  // theta (sensor's y-axis rotation)
-  float sinTheta = 2 * (quaternions.x * quaternions.z + quaternions.w * quaternions.y);
-  angles.theta = -std::asin(sinTheta) * 180 / M_PI;
-
-  // psi (sensor's z-axis rotation)
-  float tanPsi = 2 * (quaternions.x * quaternions.y - quaternions.w * quaternions.z);
-  float quadrantPsi = 2 * (quaternions.w * quaternions.w + quaternions.x * quaternions.x) - 1;
-  angles.psi = std::atan2(tanPsi, quadrantPsi) * 180 / M_PI;
-}
-*/
-
 }  // namespace imu
 }  // namespace hal
