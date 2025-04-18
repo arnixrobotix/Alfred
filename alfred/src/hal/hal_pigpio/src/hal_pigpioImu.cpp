@@ -127,6 +127,34 @@ void Pigpio::computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE])
     24) |
     (static_cast<int32_t>(data[13]) <<
     16) | (static_cast<int32_t>(data[14]) << 8) | data[15]) / MPU6050_QUATERNION_SCALE;
+
+  prev_timestamp = timestamp;
+  timestamp = rclcpp::Clock().now();
+}
+
+void Pigpio::computeAngularVelocities(Vector3Msg_t& angularVelocities)
+{
+  auto delta = (timestamp - prev_timestamp).seconds();
+
+  angularVelocities.x = 2/delta * (prev_quaternion.w*quaternion_.x
+    - prev_quaternion.x*quaternion_.w
+    - prev_quaternion.y*quaternion_.z
+    + prev_quaternion.z*quaternion_.y);
+  angularVelocities.y = 2/delta * (prev_quaternion.w*quaternion_.y
+    - prev_quaternion.x*quaternion_.z
+    - prev_quaternion.y*quaternion_.w
+    + prev_quaternion.z*quaternion_.x);
+  angularVelocities.z = 2/delta * (prev_quaternion.w*quaternion_.z
+    - prev_quaternion.x*quaternion_.y
+    - prev_quaternion.y*quaternion_.x
+    + prev_quaternion.z*quaternion_.w);
+}
+
+void Pigpio::computeLinearAcceleration(Vector3Msg_t& linearAccelerations)
+{
+  linearAccelerations.x = 0.0;
+  linearAccelerations.y = 0.0;
+  linearAccelerations.z = 0.0;
 }
 
 void Pigpio::publishImuMessage()
@@ -141,7 +169,7 @@ void Pigpio::publishImuMessage()
   header.stamp = rclcpp::Clock().now();
   message.header = header;
 
-  std::array<double, 9> covariance_zero = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::array<double, 9> covarianceZero = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   quaternion.x = quaternion_.x;
   quaternion.y = quaternion_.y;
@@ -149,21 +177,17 @@ void Pigpio::publishImuMessage()
   quaternion.w = quaternion_.w;
 
   message.orientation = quaternion;
-  message.orientation_covariance = covariance_zero;
+  message.orientation_covariance = covarianceZero;
 
-  angularVelocity.x = 0.0;  // No roll
-  angularVelocity.y = 0.0;  // TODO(arnix): Compute this value from the quaternion
-  angularVelocity.z = 0.0;  // No yaw in body referential
+  computeAngularVelocities(angularVelocity);
 
   message.angular_velocity = angularVelocity;
-  message.angular_velocity_covariance = covariance_zero;
+  message.angular_velocity_covariance = covarianceZero;
 
-  linearAcceleration.x = 0.0;  // TODO(arnix): Compute this value from the quaternion
-  linearAcceleration.y = 0.0;  // No lateral acceleration in body referential
-  linearAcceleration.z = 0.0;  // Vertical acceleration can be disregarded
+  computeLinearAcceleration(linearAcceleration);
 
   message.linear_acceleration = linearAcceleration;
-  message.linear_acceleration_covariance = covariance_zero;
+  message.linear_acceleration_covariance = covarianceZero;
 
   imuPublisher->publish(message);
 }

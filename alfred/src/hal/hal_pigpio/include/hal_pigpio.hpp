@@ -70,6 +70,9 @@ private:
   int pigpioHandle;
   int32_t i2cHandle;
   Quaternion quaternion_;
+  rclcpp::Time timestamp;
+  Quaternion prev_quaternion;
+  rclcpp::Time prev_timestamp;
   bool isImuReady;
   std::vector<uint> callbackList;
   std::vector<Motor> motors;
@@ -125,6 +128,8 @@ public:
 
   void readQuaternionData(void);
   void computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE]);
+  void computeAngularVelocities(Vector3Msg_t& angularVelocity);
+  void computeLinearAcceleration(Vector3Msg_t& linearAcceleration);
   void publishImuMessage(void);
   void readImuDataAndPublishMessage(void);
   void resetFifo(void);

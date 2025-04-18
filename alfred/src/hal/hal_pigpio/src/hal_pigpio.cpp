@@ -27,6 +27,9 @@ Pigpio::Pigpio()
   pigpioHandle{PI_NO_HANDLE},
   i2cHandle{PI_NO_HANDLE},
   quaternion_{0.0, 0.0, 0.0, 0.0},
+  timestamp{rclcpp::Clock().now()},
+  prev_quaternion{0.0, 0.0, 0.0, 0.0},
+  prev_timestamp{rclcpp::Clock().now()},
   isImuReady{false},
   callbackList{},
   motors{}
