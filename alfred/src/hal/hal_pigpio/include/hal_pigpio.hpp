@@ -128,8 +128,8 @@ public:
 
   void readQuaternionData(void);
   void computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE]);
-  void computeAngularVelocities(Vector3Msg_t& angularVelocity);
-  void computeLinearAcceleration(Vector3Msg_t& linearAcceleration);
+  void computeAngularVelocities(Vector3Msg_t & angularVelocity);
+  void computeLinearAcceleration(Vector3Msg_t & linearAcceleration);
   void publishImuMessage(void);
   void readImuDataAndPublishMessage(void);
   void resetFifo(void);

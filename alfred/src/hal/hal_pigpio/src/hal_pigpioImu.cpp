@@ -132,25 +132,27 @@ void Pigpio::computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE])
   timestamp = rclcpp::Clock().now();
 }
 
-void Pigpio::computeAngularVelocities(Vector3Msg_t& angularVelocities)
+void Pigpio::computeAngularVelocities(Vector3Msg_t & angularVelocities)
 {
   auto delta = (timestamp - prev_timestamp).seconds();
 
-  angularVelocities.x = 2/delta * (prev_quaternion.w*quaternion_.x
-    - prev_quaternion.x*quaternion_.w
-    - prev_quaternion.y*quaternion_.z
-    + prev_quaternion.z*quaternion_.y);
-  angularVelocities.y = 2/delta * (prev_quaternion.w*quaternion_.y
-    - prev_quaternion.x*quaternion_.z
-    - prev_quaternion.y*quaternion_.w
-    + prev_quaternion.z*quaternion_.x);
-  angularVelocities.z = 2/delta * (prev_quaternion.w*quaternion_.z
-    - prev_quaternion.x*quaternion_.y
-    - prev_quaternion.y*quaternion_.x
-    + prev_quaternion.z*quaternion_.w);
+  RCLCPP_INFO(get_logger(), "Delta: %f", delta);
+
+  angularVelocities.x = 2 / delta * (prev_quaternion.w * quaternion_.x -
+    prev_quaternion.x * quaternion_.w -
+    prev_quaternion.y * quaternion_.z +
+    prev_quaternion.z * quaternion_.y);
+  angularVelocities.y = 2 / delta * (prev_quaternion.w * quaternion_.y -
+    prev_quaternion.x * quaternion_.z -
+    prev_quaternion.y * quaternion_.w +
+    prev_quaternion.z * quaternion_.x);
+  angularVelocities.z = 2 / delta * (prev_quaternion.w * quaternion_.z -
+    prev_quaternion.x * quaternion_.y -
+    prev_quaternion.y * quaternion_.x +
+    prev_quaternion.z * quaternion_.w);
 }
 
-void Pigpio::computeLinearAcceleration(Vector3Msg_t& linearAccelerations)
+void Pigpio::computeLinearAcceleration(Vector3Msg_t & linearAccelerations)
 {
   linearAccelerations.x = 0.0;
   linearAccelerations.y = 0.0;
