@@ -23,14 +23,12 @@ using namespace std::placeholders;
 
 HalPoseManager::HalPoseManager()
 : rclcpp_lifecycle::LifecycleNode{"hal_pose_manager_node"},
-  encodersCount{.rightCurrrent = 0, .rightPrevious = 0,
-    .leftCurrrent = 0, .leftPrevious = 0,
-    .timestampNs = 0},
+  prevEncoderCount{.right = 0, .left = 0},
   wheelsVelocity{.right = 0.0, .left = 0.0},
   orientation{QuaternionMsg_t()},
   angularVelocity{Vector3Msg_t()},
   position_{0.0, 0.0, 0.0},
-  prev_position{0.0, 0.0, 0.0}
+  heading{0.0}
 {
 }
 
@@ -44,7 +42,7 @@ LifecycleCallbackReturn_t HalPoseManager::on_configure(
     "cmd_velocity", 10, std::bind(&HalPoseManager::computeAndPublishwheelsVelocityCmd, this, _1));
   motorsECSubscriber = this->create_subscription<HalMotorControlEncodersMsg_t>(
     "motorsEncoderCountValue", 10,
-    std::bind(&HalPoseManager::computeAndPublishOdometry, this, _1));
+    std::bind(&HalPoseManager::publishOdometry, this, _1));
   imuSubscriber = this->create_subscription<ImuDataMsg_t>(
     "imuData", 10, std::bind(&HalPoseManager::imuDataReader, this, _1));
 
@@ -121,7 +119,30 @@ void HalPoseManager::imuDataReader(const ImuDataMsg_t & msg)
   angularVelocity = msg.angular_velocity;
 }
 
-void HalPoseManager::computeAndPublishOdometry(const HalMotorControlEncodersMsg_t & msg)
+void HalPoseManager::computePosition(int32_t leftEncoderCount, int32_t rightEncoderCount)
+{
+  int32_t encoderCountDeltaLeft = leftEncoderCount - prevEncoderCount.left;
+  prevEncoderCount.left = leftEncoderCount;
+
+  int32_t encoderCountDeltaRight = rightEncoderCount - prevEncoderCount.right;
+  prevEncoderCount.right = rightEncoderCount;
+
+  double angle = wheelRadius_m / robotWidth_m *
+    (encoderCountDeltaRight - encoderCountDeltaLeft) * EncoderCountToRadians;
+  double distance = wheelRadius_m / 2.0 *
+    (encoderCountDeltaRight + encoderCountDeltaLeft) * EncoderCountToRadians;
+
+  heading += angle;
+
+  // Small angles approximation
+  double deltaX = distance * std::cos(heading);
+  double deltaY = distance * std::sin(heading);
+
+  position_.x += deltaX;
+  position_.y += deltaY;
+}
+
+void HalPoseManager::publishOdometry(const HalMotorControlEncodersMsg_t & msg)
 {
   auto header = HeaderMsg_t();
   auto odometry = OdometryMsg_t();
@@ -129,39 +150,20 @@ void HalPoseManager::computeAndPublishOdometry(const HalMotorControlEncodersMsg_
   auto twist = TwistMsg_t();
   auto position = PointMsg_t();
 
-  int32_t encoderCountDeltaLeft = 0;
-  int32_t encoderCountDeltaRight = 0;
-
-  encodersCount.leftPrevious = encodersCount.leftCurrrent;
-  encodersCount.leftCurrrent = msg.motor_left_encoder_count;
-  encoderCountDeltaLeft = encodersCount.leftCurrrent - encodersCount.leftPrevious;
-
-  encodersCount.rightPrevious = encodersCount.rightCurrrent;
-  encodersCount.rightCurrrent = msg.motor_right_encoder_count;
-  encoderCountDeltaRight = encodersCount.rightCurrrent - encodersCount.rightPrevious;
-
-  // Robot frame: X axis is oriented to the front of the robot
-  //              Y axis is colinear to the axis of the wheels
+  // Robot frame: X axis is oriented towards the front of the robot
+  //              Y axis is colinear to the axis of the wheels oriented to the left
   //              Z axis is vertical up
   // This frame is attached to the motors, so only the pendulum movement happens in it,
   // i.e. the rotation of the body around the axis of the motors
-  twist.twist.angular.y = angularVelocity.y;
+
+  twist.twist.angular.x = angularVelocity.x;
   odometry.twist = std::move(twist);
 
-  double theta = wheelRadius_m / (2.0 * robotWidth_m) *
-    (encoderCountDeltaRight - encoderCountDeltaLeft) * EncoderCountToRadians;
-  double deltaX = wheelRadius_m / 2.0 * std::cos(theta) *
-    (encoderCountDeltaRight + encoderCountDeltaLeft) * EncoderCountToRadians;
-  double deltaY = wheelRadius_m / 2.0 * std::sin(theta) *
-    (encoderCountDeltaRight + encoderCountDeltaLeft) * EncoderCountToRadians;
-
-  position_.x = prev_position.x + deltaX;
-  position_.y = prev_position.y + deltaY;
-  prev_position = position_;
+  computePosition(msg.motor_left_encoder_count, msg.motor_right_encoder_count);
 
   position.x = position_.x;
   position.y = position_.y;
-  pose.pose.position = position;
+  pose.pose.position = std::move(position);
 
   // Orientation from IMU is already expressed in World frame
   pose.pose.orientation = orientation;

@@ -35,9 +35,8 @@ namespace hal
 namespace pose_manager
 {
 
-#define EC_PER_NS_TO_M_PER_S 19231  // 52EC = 1mm
-// 360 EC per motor revolution, reduction ratio of 34 => 360 * 34 = 12240 EC per wheel revolution
-constexpr double EncoderCountToRadians = 2.0 * M_PI / 12240.0;
+// 1440 EC per motor revolution, reduction ratio of 34 => 1440 * 34 = 48960 EC per wheel revolution
+constexpr double EncoderCountToRadians = 2.0 * M_PI / 48960.0;
 constexpr double wheelRadius_m = 0.0375;
 constexpr double robotWidth_m = 0.15;
 
@@ -54,11 +53,8 @@ using HalMotorControlCommandMsg_t = hal_motor_control_interfaces::msg::HalMotorC
 
 struct EncodersCount
 {
-  int32_t rightCurrrent;
-  int32_t rightPrevious;
-  int32_t leftCurrrent;
-  int32_t leftPrevious;
-  uint32_t timestampNs;
+  int32_t right;
+  int32_t left;
 };
 
 struct WheelsVelocity
@@ -84,12 +80,12 @@ private:
   rclcpp::Subscription<HalMotorControlEncodersMsg_t>::SharedPtr motorsECSubscriber;
   rclcpp::Subscription<ImuDataMsg_t>::SharedPtr imuSubscriber;
 
-  EncodersCount encodersCount;
+  EncodersCount prevEncoderCount;
   WheelsVelocity wheelsVelocity;
   QuaternionMsg_t orientation;
   Vector3Msg_t angularVelocity;
   Point position_;
-  Point prev_position;
+  double heading;
 
 public:
   HalPoseManager();
@@ -103,8 +99,9 @@ public:
   LifecycleCallbackReturn_t on_error(const rclcpp_lifecycle::State & previous_state);
 
   void computeAndPublishwheelsVelocityCmd(const TwistMsg_t & msg);
-  void computeAndPublishOdometry(const HalMotorControlEncodersMsg_t & msg);
+  void publishOdometry(const HalMotorControlEncodersMsg_t & msg);
   void imuDataReader(const ImuDataMsg_t & msg);
+  void computePosition(int32_t leftEncoderCount, int32_t rightEncoderCount);
 };
 
 }  // namespace pose_manager

@@ -85,10 +85,10 @@ TEST_F(PoseManagerActivatedTest, PositiveXPositionOdometryPublished)
 {
   HalMotorControlEncodersMsg_t encoderCountFirstMessage;
   encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
-  encoderCountFirstMessage.motor_left_encoder_count = 520;
-  encoderCountFirstMessage.motor_right_encoder_count = 520;
+  encoderCountFirstMessage.motor_left_encoder_count = 2080;
+  encoderCountFirstMessage.motor_right_encoder_count = 2080;
 
-  poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
+  poseManager->publishOdometry(encoderCountFirstMessage);
   executorPoseManager.spin_some();
 
   ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.01, 1e-3);
@@ -99,21 +99,21 @@ TEST_F(PoseManagerActivatedTest, PositiveXPositionOdometryPublishedTwoMessages)
 {
   HalMotorControlEncodersMsg_t encoderCountFirstMessage;
   encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
-  encoderCountFirstMessage.motor_left_encoder_count = 520;
-  encoderCountFirstMessage.motor_right_encoder_count = 520;
+  encoderCountFirstMessage.motor_left_encoder_count = 2080;
+  encoderCountFirstMessage.motor_right_encoder_count = 2080;
 
   HalMotorControlEncodersMsg_t encoderCountSecondMessage;
   encoderCountSecondMessage.header.stamp.nanosec = 20 * MS_TO_NS;
-  encoderCountSecondMessage.motor_left_encoder_count = 1560;
-  encoderCountSecondMessage.motor_right_encoder_count = 1560;
+  encoderCountSecondMessage.motor_left_encoder_count = 6240;
+  encoderCountSecondMessage.motor_right_encoder_count = 6240;
 
-  poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
+  poseManager->publishOdometry(encoderCountFirstMessage);
   executorPoseManager.spin_some();
 
   ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.01, 1e-3);
   ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-3);
 
-  poseManager->computeAndPublishOdometry(encoderCountSecondMessage);
+  poseManager->publishOdometry(encoderCountSecondMessage);
   executorPoseManager.spin_some();
 
   ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.03, 1e-3);
@@ -124,28 +124,45 @@ TEST_F(PoseManagerActivatedTest, NegativeXPositionOdometryPublished)
 {
   HalMotorControlEncodersMsg_t encoderCountFirstMessage;
   encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
-  encoderCountFirstMessage.motor_left_encoder_count = -520;
-  encoderCountFirstMessage.motor_right_encoder_count = -520;
+  encoderCountFirstMessage.motor_left_encoder_count = -2080;
+  encoderCountFirstMessage.motor_right_encoder_count = -2080;
 
-  poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
+  poseManager->publishOdometry(encoderCountFirstMessage);
   executorPoseManager.spin_some();
 
   ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, -0.01, 1e-3);
-  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-4);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-3);
+}
+
+TEST_F(PoseManagerActivatedTest, XYPositionNoMovementOdometryPublished)
+{
+  HalMotorControlEncodersMsg_t encoderCountFirstMessage;
+  encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
+  encoderCountFirstMessage.motor_left_encoder_count = 2080;
+  encoderCountFirstMessage.motor_right_encoder_count = -2080;
+
+  poseManager->publishOdometry(encoderCountFirstMessage);
+  executorPoseManager.spin_some();
+
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.0, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, 0.0, 1e-3);
 }
 
 TEST_F(PoseManagerActivatedTest, XYPositionOdometryPublished)
 {
-  HalMotorControlEncodersMsg_t encoderCountFirstMessage;
-  encoderCountFirstMessage.header.stamp.nanosec = 10 * MS_TO_NS;
-  encoderCountFirstMessage.motor_left_encoder_count = 12240;
-  encoderCountFirstMessage.motor_right_encoder_count = 0;
+  for (int i = 1; i <= 80; i++) {
+    HalMotorControlEncodersMsg_t encoderCountMessage;
+    encoderCountMessage.header.stamp.nanosec = i * MS_TO_NS;
+    encoderCountMessage.motor_left_encoder_count = 0;
+    encoderCountMessage.motor_right_encoder_count = i * 612;
 
-  poseManager->computeAndPublishOdometry(encoderCountFirstMessage);
-  executorPoseManager.spin_some();
+    poseManager->publishOdometry(encoderCountMessage);
+    executorPoseManager.spin_some();
+  }
 
-  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, 0.083, 1e-3);
-  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, -0.083, 1e-3);
+  // Robot turned 90° to the left around its left wheel
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.x, robotWidth_m / 2.0, 1e-3);
+  ASSERT_NEAR(poseManagerChecker->odometry.pose.position.y, robotWidth_m / 2.0, 1e-3);
 }
 
 }  // namespace test
