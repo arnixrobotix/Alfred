@@ -26,7 +26,9 @@ HalPoseManager::HalPoseManager()
   encodersCount{.rightCurrrent = 0, .rightPrevious = 0,
     .leftCurrrent = 0, .leftPrevious = 0,
     .timestampNs = 0},
-  wheelsVelocity{.right = 0.0, .left = 0.0}
+  wheelsVelocity{.right = 0.0, .left = 0.0},
+  orientation{QuaternionMsg_t()},
+  angularVelocity{Vector3Msg_t()}
 {
 }
 
@@ -41,6 +43,8 @@ LifecycleCallbackReturn_t HalPoseManager::on_configure(
   motorsECSubscriber = this->create_subscription<HalMotorControlEncodersMsg_t>(
     "motorsEncoderCountValue", 10,
     std::bind(&HalPoseManager::computeAndPublishOdometry, this, _1));
+  imuSubscriber = this->create_subscription<ImuDataMsg_t>(
+    "imuData", 10, std::bind(&HalPoseManager::imuDataReader, this, _1));
 
   RCLCPP_INFO(get_logger(), "Node configured!");
 
@@ -109,6 +113,12 @@ void HalPoseManager::computeAndPublishwheelsVelocityCmd(const TwistMsg_t & msg)
   wheelsVelocityCmdPublisher->publish(wheelsVelocityCommandMsg);
 }
 
+void HalPoseManager::imuDataReader(const ImuDataMsg_t & msg)
+{
+  orientation = msg.orientation;
+  angularVelocity = msg.angular_velocity;
+}
+
 void HalPoseManager::computeAndPublishOdometry(const HalMotorControlEncodersMsg_t & msg)
 {
   auto header = HeaderMsg_t();
@@ -139,8 +149,10 @@ void HalPoseManager::computeAndPublishOdometry(const HalMotorControlEncodersMsg_
   }
 
   twist.twist.linear.x = wheelsVelocity.right;
+  twist.twist.angular = angularVelocity;
   odometry.twist = std::move(twist);
 
+  pose.pose.orientation = orientation;
   odometry.child_frame_id = "Body";
   odometry.pose = std::move(pose);
 

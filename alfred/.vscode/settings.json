@@ -86,6 +86,7 @@
         "bitset": "cpp",
         "cfenv": "cpp",
         "*.ipp": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "valarray": "cpp"
     }
 }

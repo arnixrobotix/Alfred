@@ -29,8 +29,6 @@ Controller::Controller()
 LifecycleCallbackReturn_t Controller::on_configure(
   const rclcpp_lifecycle::State & previous_state)
 {
-  imuSubscriber = this->create_subscription<ImuDataMsg_t>(
-    "imuData", 10, std::bind(&Controller::imuDataReader, this, _1));  // TODO(arnix): temporary
   odometrySubscriber = this->create_subscription<OdometryMsg_t>(
     "odometry", 10, std::bind(&Controller::odometryReader, this, _1));
 
@@ -64,7 +62,6 @@ LifecycleCallbackReturn_t Controller::on_deactivate(
 LifecycleCallbackReturn_t Controller::on_cleanup(
   const rclcpp_lifecycle::State & previous_state)
 {
-  imuSubscriber.reset();
   odometrySubscriber.reset();
   twistPublisher.reset();
 
@@ -76,7 +73,6 @@ LifecycleCallbackReturn_t Controller::on_cleanup(
 LifecycleCallbackReturn_t Controller::on_shutdown(
   const rclcpp_lifecycle::State & previous_state)
 {
-  imuSubscriber.reset();
   odometrySubscriber.reset();
   twistPublisher.reset();
 
@@ -91,9 +87,11 @@ LifecycleCallbackReturn_t Controller::on_error(
   return LifecycleCallbackReturn_t::FAILURE;
 }
 
-void Controller::imuDataReader(const ImuDataMsg_t & msg)
+void Controller::odometryReader(const OdometryMsg_t & msg)
 {
-  Quaternion quaternion{msg.orientation.w, msg.orientation.x, msg.orientation.y, msg.orientation.z};
+  Quaternion quaternion{msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
+    msg.pose.pose.orientation.y, msg.pose.pose.orientation.z};
+
   // phi (sensor's x-axis rotation)
   float tanPhi = 2 * (quaternion.y * quaternion.z - quaternion.w * quaternion.x);
   float quadrantPhi = 2 * (quaternion.w * quaternion.w + quaternion.z * quaternion.z) - 1;
@@ -109,10 +107,6 @@ void Controller::imuDataReader(const ImuDataMsg_t & msg)
   auto psi = std::atan2(tanPsi, quadrantPsi) * 180 / M_PI;
 
   RCLCPP_INFO(get_logger(), "Phi: %f, Theta: %f, Psi: %f", phi, theta, psi);
-}
-
-void Controller::odometryReader(const OdometryMsg_t & msg)
-{
 }
 
 }  // namespace controller

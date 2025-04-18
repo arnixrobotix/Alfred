@@ -18,7 +18,6 @@
 #include "common.hpp"
 
 // Services and messages headers (generated)
-#include "sensor_msgs/msg/imu.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
@@ -28,7 +27,6 @@ namespace app
 namespace controller
 {
 
-using ImuDataMsg_t = sensor_msgs::msg::Imu;
 using OdometryMsg_t = nav_msgs::msg::Odometry;
 using PoseMsg_t = geometry_msgs::msg::PoseWithCovariance;
 using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
@@ -36,7 +34,6 @@ using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
 class Controller : public rclcpp_lifecycle::LifecycleNode
 {
 private:
-  rclcpp::Subscription<ImuDataMsg_t>::SharedPtr imuSubscriber;
   rclcpp::Subscription<OdometryMsg_t>::SharedPtr odometrySubscriber;
   rclcpp_lifecycle::LifecyclePublisher<TwistMsg_t>::SharedPtr twistPublisher;
 
@@ -51,7 +48,6 @@ public:
   LifecycleCallbackReturn_t on_shutdown(const rclcpp_lifecycle::State & previous_state);
   LifecycleCallbackReturn_t on_error(const rclcpp_lifecycle::State & previous_state);
 
-  void imuDataReader(const ImuDataMsg_t & msg);
   void odometryReader(const OdometryMsg_t & msg);
 };
 

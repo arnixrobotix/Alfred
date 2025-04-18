@@ -24,6 +24,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "hal_motor_control_interfaces/msg/hal_motor_control_encoders.hpp"
 #include "hal_motor_control_interfaces/msg/hal_motor_control_command.hpp"
@@ -35,7 +36,10 @@ namespace pose_manager
 
 #define EC_PER_NS_TO_M_PER_S 19231  // 52EC = 1mm
 
+using ImuDataMsg_t = sensor_msgs::msg::Imu;
 using OdometryMsg_t = nav_msgs::msg::Odometry;
+using QuaternionMsg_t = geometry_msgs::msg::Quaternion;
+using Vector3Msg_t = geometry_msgs::msg::Vector3;
 using PoseMsg_t = geometry_msgs::msg::PoseWithCovariance;
 using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
 using HeaderMsg_t = std_msgs::msg::Header;
@@ -65,9 +69,12 @@ private:
     wheelsVelocityCmdPublisher;
   rclcpp::Subscription<TwistMsg_t>::SharedPtr twistSubscriber;
   rclcpp::Subscription<HalMotorControlEncodersMsg_t>::SharedPtr motorsECSubscriber;
+  rclcpp::Subscription<ImuDataMsg_t>::SharedPtr imuSubscriber;
 
   EncodersCount encodersCount;
   WheelsVelocity wheelsVelocity;
+  QuaternionMsg_t orientation;
+  Vector3Msg_t angularVelocity;
 
 public:
   HalPoseManager();
@@ -82,6 +89,7 @@ public:
 
   void computeAndPublishwheelsVelocityCmd(const TwistMsg_t & msg);
   void computeAndPublishOdometry(const HalMotorControlEncodersMsg_t & msg);
+  void imuDataReader(const ImuDataMsg_t & msg);
 };
 
 }  // namespace pose_manager
