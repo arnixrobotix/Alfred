@@ -107,6 +107,8 @@ void Pigpio::readQuaternionData(void)
 
 void Pigpio::computeQuaternion(char (& data)[MPU6050_DMP_FIFO_QUAT_SIZE])
 {
+  prev_quaternion = quaternion_;
+
   quaternion_.w =
     static_cast<double>((static_cast<int32_t>(data[0]) <<
     24) |
@@ -136,17 +138,15 @@ void Pigpio::computeAngularVelocities(Vector3Msg_t & angularVelocities)
 {
   auto delta = (timestamp - prev_timestamp).seconds();
 
-  RCLCPP_INFO(get_logger(), "Delta: %f", delta);
-
-  angularVelocities.x = 2 / delta * (prev_quaternion.w * quaternion_.x -
+  angularVelocities.x = 2.0 / delta * (prev_quaternion.w * quaternion_.x -
     prev_quaternion.x * quaternion_.w -
     prev_quaternion.y * quaternion_.z +
     prev_quaternion.z * quaternion_.y);
-  angularVelocities.y = 2 / delta * (prev_quaternion.w * quaternion_.y -
+  angularVelocities.y = 2.0 / delta * (prev_quaternion.w * quaternion_.y -
     prev_quaternion.x * quaternion_.z -
     prev_quaternion.y * quaternion_.w +
     prev_quaternion.z * quaternion_.x);
-  angularVelocities.z = 2 / delta * (prev_quaternion.w * quaternion_.z -
+  angularVelocities.z = 2.0 / delta * (prev_quaternion.w * quaternion_.z -
     prev_quaternion.x * quaternion_.y -
     prev_quaternion.y * quaternion_.x +
     prev_quaternion.z * quaternion_.w);
