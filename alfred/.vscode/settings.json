@@ -88,5 +88,6 @@
         "*.ipp": "cpp",
         "regex": "cpp",
         "valarray": "cpp"
-    }
+    },
+    "ros.distro": "humble"
 }

@@ -33,24 +33,24 @@ steps:
   depends_on:
     - Build Alfred
 
-# - name: Upload Alfred's build logs
-#   image: plugins/artifactory
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: alfred/log/latest_build/build_logs.tar.gz
-#     target: Alfred/logs/build/host/build_$${DRONE_BUILD_NUMBER}/logs.tar.gz
-#     flat: true
-#     insecure: true
-#   when:
-#     status:
-#     - failure
-#   depends_on:
-#     - Archive Alfred's build logs
+- name: Upload Alfred's build logs
+  image: plugins/artifactory
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: alfred/log/latest_build/build_logs.tar.gz
+    target: Alfred/logs/build/host/build_$${DRONE_BUILD_NUMBER}/logs.tar.gz
+    flat: true
+    insecure: true
+  when:
+    status:
+    - failure
+  depends_on:
+    - Archive Alfred's build logs
 
 - name: Test Alfred
   image: ros:humble-ros-base-jammy@sha256:e2bf5d73089ecafac2f14de05e7cbc1b20ab7568185e2011cec508286dcc6b09
@@ -79,25 +79,25 @@ steps:
   depends_on:
     - Test Alfred
 
-# - name: Upload Alfred's tests logs
-#   image: plugins/artifactory
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: alfred/log/latest_test/tests_logs.tar.gz
-#     target: Alfred/logs/tests/build_$${DRONE_BUILD_NUMBER}/logs.tar.gz
-#     flat: true
-#     insecure: true
-#   when:
-#     status:
-#     - failure
-#     - success
-#   depends_on:
-#     - Archive Alfred's tests logs
+- name: Upload Alfred's tests logs
+  image: plugins/artifactory
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: alfred/log/latest_test/tests_logs.tar.gz
+    target: Alfred/logs/tests/build_$${DRONE_BUILD_NUMBER}/logs.tar.gz
+    flat: true
+    insecure: true
+  when:
+    status:
+    - failure
+    - success
+  depends_on:
+    - Archive Alfred's tests logs
 
 - name: Test remote
   image: rust:latest
@@ -188,24 +188,24 @@ steps:
   depends_on:
     - Build Alfred
 
-# - name: Upload Alfred's build logs
-#   image: plugins/artifactory
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: alfred/log/latest_build/build_logs.tar.gz
-#     target: Alfred/logs/build/target/build_$${DRONE_BUILD_NUMBER}/logs.tar.gz
-#     flat: true
-#     insecure: true
-#   when:
-#     status:
-#     - failure
-#   depends_on:
-#     - Archive Alfred's build logs
+- name: Upload Alfred's build logs
+  image: plugins/artifactory
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: alfred/log/latest_build/build_logs.tar.gz
+    target: Alfred/logs/build/target/build_$${DRONE_BUILD_NUMBER}/logs.tar.gz
+    flat: true
+    insecure: true
+  when:
+    status:
+    - failure
+  depends_on:
+    - Archive Alfred's build logs
 
 - name: Archive Alfred's binaries
   image: alpine:latest
@@ -215,21 +215,21 @@ steps:
   depends_on:
     - Copy install files to host
 
-# - name: Upload Alfred's binaries
-#   image: plugins/artifactory
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: alfred/install/install.tar.gz
-#     target: Alfred/binaries/development/build_$${DRONE_BUILD_NUMBER}/install.tar.gz
-#     flat: true
-#     insecure: true
-#   depends_on:
-#     - Archive Alfred's binaries
+- name: Upload Alfred's binaries
+  image: plugins/artifactory
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: alfred/install/install.tar.gz
+    target: Alfred/binaries/development/build_$${DRONE_BUILD_NUMBER}/install.tar.gz
+    flat: true
+    insecure: true
+  depends_on:
+    - Archive Alfred's binaries
 
 - name: Build remote
   image: rust:latest
@@ -238,25 +238,25 @@ steps:
     - rustup target add thumbv7em-none-eabihf
     - cargo build
 
-# - name: Upload remote's binaries
-#   image: plugins/artifactory
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: remote/remote/target/thumbv7em-none-eabihf/debug/bluetooth
-#     target: Alfred/binaries/development/build_$${DRONE_BUILD_NUMBER}/remote
-#     flat: true
-#     insecure: true
-#   when:
-#     status:
-#     - failure
-#     - success
-#   depends_on:
-#     - Build remote
+- name: Upload remote's binaries
+  image: plugins/artifactory
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: remote/remote/target/thumbv7em-none-eabihf/debug/bluetooth
+    target: Alfred/binaries/development/build_$${DRONE_BUILD_NUMBER}/remote
+    flat: true
+    insecure: true
+  when:
+    status:
+    - failure
+    - success
+  depends_on:
+    - Build remote
 
 volumes:
 - name: target_files
@@ -277,24 +277,24 @@ platform:
   arch: amd64
 
 steps:
-- name: Deploy Alfred
-  image: drillster/drone-rsync
-  volumes:
-    - name: target_files
-      path: /tmp/target_files
-  settings:
-    hosts: [ "192.168.3.253" ]
-    port: 22
-    source: /tmp/target_files/
-    target: ~/Alfred/
-    user:
-      from_secret: ALFRED_USERNAME
-    key:
-      from_secret: ALFRED_SSH_KEY
-    args:
-      -v
-      --delete
-      --copy-links
+# - name: Deploy Alfred
+#   image: drillster/drone-rsync
+#   volumes:
+#     - name: target_files
+#       path: /tmp/target_files
+#   settings:
+#     hosts: [ "192.168.3.253" ]
+#     port: 22
+#     source: /tmp/target_files/
+#     target: ~/Alfred/
+#     user:
+#       from_secret: ALFRED_USERNAME
+#     key:
+#       from_secret: ALFRED_SSH_KEY
+#     args:
+#       -v
+#       --delete
+#       --copy-links
 
 - name: Archive Alfred's binaries
   image: alpine:latest
@@ -307,24 +307,24 @@ steps:
   depends_on:
     - Deploy Alfred
 
-# - name: Upload Alfred's binaries
-#   image: plugins/artifactory
-#   volumes:
-#     - name: target_files
-#       path: /tmp/target_files
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: /tmp/target_files/install.tar.gz
-#     target: Alfred/binaries/deployment/build_$${DRONE_BUILD_NUMBER}/install.tar.gz
-#     flat: true
-#     insecure: true
-#   depends_on:
-#     - Archive Alfred's binaries
+- name: Upload Alfred's binaries
+  image: plugins/artifactory
+  volumes:
+    - name: target_files
+      path: /tmp/target_files
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: /tmp/target_files/install.tar.gz
+    target: Alfred/binaries/deployment/build_$${DRONE_BUILD_NUMBER}/install.tar.gz
+    flat: true
+    insecure: true
+  depends_on:
+    - Archive Alfred's binaries
 
 - name: Build remote
   image: rust:latest
@@ -333,25 +333,25 @@ steps:
     - rustup target add thumbv7em-none-eabihf
     - cargo build --release
 
-# - name: Upload remote's binaries
-#   image: plugins/artifactory
-#   settings:
-#     url:
-#       from_secret: ARTIFACTORY_PATH
-#     username:
-#       from_secret: ARTIFACTORY_USERNAME
-#     password:
-#       from_secret: ARTIFACTORY_PASSWORD
-#     source: remote/remote/target/thumbv7em-none-eabihf/release/bluetooth
-#     target: Alfred/binaries/deployment/build_$${DRONE_BUILD_NUMBER}/remote
-#     flat: true
-#     insecure: true
-#   when:
-#     status:
-#     - failure
-#     - success
-#   depends_on:
-#     - Build remote
+- name: Upload remote's binaries
+  image: plugins/artifactory
+  settings:
+    url:
+      from_secret: ARTIFACTORY_PATH
+    username:
+      from_secret: ARTIFACTORY_USERNAME
+    password:
+      from_secret: ARTIFACTORY_PASSWORD
+    source: remote/remote/target/thumbv7em-none-eabihf/release/bluetooth
+    target: Alfred/binaries/deployment/build_$${DRONE_BUILD_NUMBER}/remote
+    flat: true
+    insecure: true
+  when:
+    status:
+    - failure
+    - success
+  depends_on:
+    - Build remote
 
 volumes:
 - name: target_files

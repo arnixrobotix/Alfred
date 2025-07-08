@@ -411,7 +411,7 @@ void Imu::configureDmpFeatures(int32_t imuHandle)
       imuHandle, MPU6050_DMP_FEATURE_SEND_ANDROID_ORIENTATION_BANK,
       MPU6050_DMP_FEATURE_SEND_ANDROID_ORIENTATION_ADDRESS, dmpNoAndroidOrientation))
   {
-    RCLCPP_ERROR(get_logger(), "Failed to configure DMP features (android orientation disbaled)!");
+    RCLCPP_ERROR(get_logger(), "Failed to configure DMP features (android orientation disabled)!");
     return;
   }
 
