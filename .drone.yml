@@ -8,12 +8,8 @@ platform:
 
 steps:
 - name: Build Alfred
-  image: ros:humble-ros-base-jammy
+  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
   commands:
-    - apt update && sudo apt install curl -y
-    - export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-    - curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
-    - dpkg -i /tmp/ros2-apt-source.deb
     - cd alfred
     - rm -fR src/sim/
     - . /opt/ros/$ROS_DISTRO/setup.sh
@@ -57,12 +53,8 @@ steps:
     - Archive Alfred's build logs
 
 - name: Test Alfred
-  image: ros:humble-ros-base-jammy
+  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
   commands:
-    - apt update && sudo apt install curl -y
-    - export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-    - curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
-    - dpkg -i /tmp/ros2-apt-source.deb
     - cd alfred
     - rm -fR src/sim/
     - . /opt/ros/$ROS_DISTRO/setup.sh
@@ -129,12 +121,8 @@ platform:
 
 steps:
 - name: Prepare sysroot
-  image: ros:humble-ros-base-jammy
+  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
   commands:
-    - apt update && sudo apt install curl -y
-    - export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-    - curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
-    - dpkg -i /tmp/ros2-apt-source.deb
     - cd alfred
     - rm -fR src/sim/
     - . /opt/ros/$ROS_DISTRO/setup.sh
@@ -149,7 +137,7 @@ steps:
     - cp -a lib usr opt etc $DRONE_WORKSPACE/alfred/cross_compile/sysroot
 
 - name: Build Alfred
-  image: ros:humble-ros-base-jammy
+  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
   environment:
     RMW_IMPLEMENTATION: rmw_fastrtps_cpp
     TARGET_ARCH: aarch64
@@ -159,10 +147,6 @@ steps:
     CXX: /usr/bin/aarch64-linux-gnu-g++
 
   commands:
-    - apt update && sudo apt install curl -y
-    - export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
-    - curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
-    - dpkg -i /tmp/ros2-apt-source.deb
     - export SYSROOT=$DRONE_WORKSPACE/alfred/cross_compile/sysroot
     - export ROS2_INSTALL_PATH=$DRONE_WORKSPACE/alfred/install
     - export CROSS_COMPILE_DIR=$DRONE_WORKSPACE/alfred/cross_compile
