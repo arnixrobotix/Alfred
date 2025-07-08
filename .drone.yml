@@ -121,7 +121,7 @@ platform:
 
 steps:
 - name: Prepare sysroot
-  image: ros:humble-ros-base-jammy@sha256:6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
+  image: ros:humble-ros-base-jammy@sha256:b9f1c3872615663f504b882b66503d267ed703123596b276ed8a477e3380c451
   commands:
     - cd alfred
     - rm -fR src/sim/
