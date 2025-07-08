@@ -8,7 +8,7 @@ platform:
 
 steps:
 - name: Build Alfred
-  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
+  image: ros:humble-ros-base-jammy@sha256:e4be824130baa1dcac4398eed53559f98ecac0a89315f8681490a8a0c5271dca
   commands:
     - cd alfred
     - rm -fR src/sim/
@@ -53,7 +53,7 @@ steps:
     - Archive Alfred's build logs
 
 - name: Test Alfred
-  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
+  image: ros:humble-ros-base-jammy@sha256:e4be824130baa1dcac4398eed53559f98ecac0a89315f8681490a8a0c5271dca
   commands:
     - cd alfred
     - rm -fR src/sim/
@@ -121,7 +121,7 @@ platform:
 
 steps:
 - name: Prepare sysroot
-  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
+  image: ros:humble-ros-base-jammy@sha256:6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
   commands:
     - cd alfred
     - rm -fR src/sim/
@@ -137,7 +137,7 @@ steps:
     - cp -a lib usr opt etc $DRONE_WORKSPACE/alfred/cross_compile/sysroot
 
 - name: Build Alfred
-  image: ros:humble-ros-base-jammy@6faa295af1dddacafa9e4f381c9500ca2a7ee215503056f5eab2f450a5f267e1
+  image: ros:humble-ros-base-jammy@sha256:e4be824130baa1dcac4398eed53559f98ecac0a89315f8681490a8a0c5271dca
   environment:
     RMW_IMPLEMENTATION: rmw_fastrtps_cpp
     TARGET_ARCH: aarch64
