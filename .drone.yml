@@ -117,7 +117,7 @@ type: docker
 name: Target build
 platform:
   os: linux
-  arch: arm64
+  arch: amd64
 
 steps:
 - name: Prepare sysroot
