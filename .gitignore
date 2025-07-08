@@ -2,9 +2,6 @@ alfred/.vscode/browse.vc.db
 alfred/build/
 alfred/install/
 alfred/log/
-alfred/cross_compile/qemu-user-static
-alfred/cross_compile/sysroot
-alfred/cross_compile/workspace
 alfred/src/hal/hal_lifecycle_manager/launch/hal_bringup_host_launch.py
 
 remote/**/*.rs.bk

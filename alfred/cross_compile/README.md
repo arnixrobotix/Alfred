@@ -1,5 +1,8 @@
 # Description
 
-This directory contains the necessary files to generate the sysroot needed by the cross-compîler.
+This directory contains the necessary files to cross-compile the workspace for the target.
 
-qemu-user-static + binfmt-support +registration
+TODO: Explain how to run cross-compilation
+Install qemu binfmt-support qemu-user-static
+
+Run "docker run --rm --privileged multiarch/qemu-user-static:register"

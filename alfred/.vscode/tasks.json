@@ -10,13 +10,33 @@
             },
             "command": "colcon",
             "args": [
+                "--log-base",
+                "log/host",
                 "build",
+                "--build-base",
+                "build/host",
+                "--install-base",
+                "install/host",
                 "--symlink-install",
                 "--cmake-args",
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
                 "-DSYNTHETIC_BUILD:BOOL=ON",
                 "--no-warn-unused-cli"
             ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "ROS2: Build target workspace",
+            "detail": "Build workspace for target.",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/cross_compile"
+            },
+            "command": "./cross_compile.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -32,7 +52,13 @@
             },
             "command": "colcon",
             "args": [
+                "--log-base",
+                "log/host",
                 "test",
+                "--build-base",
+                "build/host",
+                "--install-base",
+                "install/host",
             ],
             "group": {
                 "kind": "test"
@@ -47,7 +73,11 @@
             },
             "command": "colcon",
             "args": [
-                "test-result"
+                "--log-base",
+                "log/host",
+                "test-result",
+                "--test-result-base",
+                "build/host"
             ],
             "group": {
                 "kind": "test"
@@ -104,7 +134,13 @@
             },
             "command": "colcon",
             "args": [
+                "--log-base",
+                "log/host",
                 "build",
+                "--build-base",
+                "build/host",
+                "--install-base",
+                "install/host",
                 "--cmake-target",
                 "clean"
             ],
@@ -133,7 +169,7 @@
         },
         {
             "label": "Workspace: Purge",
-            "detail": "Purge workspace by deleting all generated files.",
+            "detail": "Purge workspace by deleting all generated files for host.",
             "type": "shell",
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -141,9 +177,9 @@
             "command": "rm",
             "args": [
                 "-fr",
-                "build",
-                "install",
-                "log"
+                "build/host",
+                "install/host",
+                "log/host"
             ],
             "problemMatcher": []
         }
