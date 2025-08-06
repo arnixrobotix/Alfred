@@ -6,6 +6,8 @@ sudo apt-get update
 
 cd /ros2_ws
 
+rm -fr install/target
+
 rosdep install -ry \
     --rosdistro humble \
     --from-paths src \
@@ -14,6 +16,7 @@ rosdep install -ry \
 colcon --log-base log/target \
        build --build-base build/target \
              --install-base install/target \
-             --symlink-install \
              --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
              --no-warn-unused-cli
+
+chown -R 1000:1000 build/target install/target log/target
