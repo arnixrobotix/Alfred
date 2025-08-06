@@ -168,6 +168,24 @@
             }
         },
         {
+            "label": "ROS2: Install on target",
+            "detail": "Install files on Raspberry Pi 3B+.",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/install/target"
+            },
+            "command": "rsync",
+            "args": [
+                "--copy-links",
+                "-av",
+                ".",
+                "arnix@alfred:/home/arnix/Alfred"
+            ],
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
             "label": "Workspace: Purge",
             "detail": "Purge workspace by deleting all generated files for host.",
             "type": "shell",
