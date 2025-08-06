@@ -30,13 +30,17 @@ def generate_launch_description():
         name='app_controller', namespace='',
         package='app_controller', executable='app_controller_node', output='screen')
 
-    register_event_handler_for_app_controller_reaches_active_state = \
+    register_event_handler_for_app_controller_reaches_configure_state = \
         launch.actions.RegisterEventHandler(
             launch_ros.event_handlers.OnStateTransition(
-                target_lifecycle_node=app_controller_node, goal_state='active',
+                target_lifecycle_node=app_controller_node, goal_state='inactive',
                 entities=[
                     launch.actions.LogInfo(
                         msg="app_controller_node active"),
+                    launch.actions.EmitEvent(event=launch_ros.events.lifecycle.ChangeState(
+                        lifecycle_node_matcher=launch.events.matches_action(app_controller_node),
+                        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE,
+                    )),
                 ],
             )
         )
@@ -48,7 +52,7 @@ def generate_launch_description():
         )
     )
 
-    ld.add_action(register_event_handler_for_app_controller_reaches_active_state)
+    ld.add_action(register_event_handler_for_app_controller_reaches_configure_state)
     ld.add_action(app_controller_node)
     ld.add_action(emit_event_to_request_app_controller_configure_transition)
 
