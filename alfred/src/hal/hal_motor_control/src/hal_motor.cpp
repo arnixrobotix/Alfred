@@ -34,12 +34,15 @@ Motor::Motor(
 
 void Motor::configureGpios(
   setOutputModeSyncClientNode_t gpioSetOutputModeClient,
+  setPullUpSyncClientNode_t gpioSetPullUpClient,
   setInputModeSyncClientNode_t gpioSetInputModeClient,
   setEncoderCallbackSyncClientNode_t gpioSetEncoderCallbackClient,
   setPwmFrequencySyncClientNode_t gpioSetPwmFrequencyClient)
 {
   auto setInputModeEncoderChARequest = std::make_shared<HalPigpioSetInputMode_t::Request>();
   auto setInputModeEncoderChBRequest = std::make_shared<HalPigpioSetInputMode_t::Request>();
+  auto setPullUpEncoderChARequest = std::make_shared<HalPigpioSetPullUp_t::Request>();
+  auto setPullUpEncoderChBRequest = std::make_shared<HalPigpioSetPullUp_t::Request>();
   auto setEncoderCallbackChARequest = std::make_shared<HalPigpioSetEncoderCallback_t::Request>();
   auto setEncoderCallbackChBRequest = std::make_shared<HalPigpioSetEncoderCallback_t::Request>();
   auto setOutputModePwmChARequest = std::make_shared<HalPigpioSetOutputMode_t::Request>();
@@ -51,6 +54,11 @@ void Motor::configureGpios(
   setInputModeEncoderChARequest->gpio_id = encoder.channelA.gpio;
   if (!gpioSetInputModeClient.sendRequest(setInputModeEncoderChARequest)->has_succeeded) {
     RCLCPP_ERROR(rclcpp::get_logger("Motors"), "Failed to call service setInputMode");
+  }
+
+  setPullUpEncoderChARequest->gpio_id = encoder.channelA.gpio;
+  if (!gpioSetPullUpClient.sendRequest(setPullUpEncoderChARequest)->has_succeeded) {
+    RCLCPP_ERROR(rclcpp::get_logger("Motors"), "Failed to call service setPullUp");
   }
 
   setEncoderCallbackChARequest->gpio_id = encoder.channelA.gpio;
@@ -66,6 +74,11 @@ void Motor::configureGpios(
   setInputModeEncoderChBRequest->gpio_id = encoder.channelB.gpio;
   if (!gpioSetInputModeClient.sendRequest(setInputModeEncoderChBRequest)->has_succeeded) {
     RCLCPP_ERROR(rclcpp::get_logger("Motors"), "Failed to call service setInputMode");
+  }
+
+  setPullUpEncoderChBRequest->gpio_id = encoder.channelB.gpio;
+  if (!gpioSetPullUpClient.sendRequest(setPullUpEncoderChBRequest)->has_succeeded) {
+    RCLCPP_ERROR(rclcpp::get_logger("Motors"), "Failed to call service setPullUp");
   }
 
   setEncoderCallbackChBRequest->gpio_id = encoder.channelB.gpio;
@@ -137,7 +150,7 @@ void Motor::setPwmDutyCycleAndDirection(
       setPwmDutycyclePwmChARequest, setPwmDutycycleCallback);
 
     setPwmDutycyclePwmChBRequest->gpio_id = pwmB.gpio;
-    setPwmDutycyclePwmChBRequest->dutycycle = pwmB.dutycycle;
+    setPwmDutycyclePwmChBRequest->dutycycle = 0;
     auto setPwmDutycyclePwmChBFuture = gpioSetPwmDutycycleClient->async_send_request(
       setPwmDutycyclePwmChBRequest, setPwmDutycycleCallback);
   } else {

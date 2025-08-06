@@ -21,6 +21,7 @@
 #include "hal_motor_control_interfaces/msg/hal_motor_control_encoders.hpp"
 #include "hal_motor_control_interfaces/msg/hal_motor_control_command.hpp"
 #include "hal_pigpio_interfaces/msg/hal_pigpio_encoder_count.hpp"
+#include "hal_pigpio_interfaces/srv/hal_pigpio_set_pull_up.hpp"
 #include "hal_pigpio_interfaces/srv/hal_pigpio_set_input_mode.hpp"
 #include "hal_pigpio_interfaces/srv/hal_pigpio_set_output_mode.hpp"
 #include "hal_pigpio_interfaces/srv/hal_pigpio_set_encoder_callback.hpp"
@@ -46,7 +47,7 @@ namespace motor
 
 #define MOTOR_PWM_FREQUENCY 1000
 
-#define M_PER_S_TO_DUTYCYCLE 255
+#define M_PER_S_TO_DUTYCYCLE 136
 
 using HalMotorControlEncodersMsg_t = hal_motor_control_interfaces::msg::HalMotorControlEncoders;
 using HalMotorControlCommandMsg_t = hal_motor_control_interfaces::msg::HalMotorControlCommand;
@@ -54,6 +55,7 @@ using HalPigpioEncoderCountMsg_t = hal_pigpio_interfaces::msg::HalPigpioEncoderC
 using HeaderMsg_t = std_msgs::msg::Header;
 
 using HalPigpioSetInputMode_t = hal_pigpio_interfaces::srv::HalPigpioSetInputMode;
+using HalPigpioSetPullUp_t = hal_pigpio_interfaces::srv::HalPigpioSetPullUp;
 using HalPigpioSetOutputMode_t = hal_pigpio_interfaces::srv::HalPigpioSetOutputMode;
 using HalPigpioSetEncoderCallback_t = hal_pigpio_interfaces::srv::HalPigpioSetEncoderCallback;
 using HalPigpioSetPwmFrequency_t = hal_pigpio_interfaces::srv::HalPigpioSetPwmFrequency;

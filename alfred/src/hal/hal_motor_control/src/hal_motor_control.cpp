@@ -33,6 +33,7 @@ MotorControl::MotorControl()
     MOTOR_RIGHT_ENCODER_CH_A_GPIO, MOTOR_RIGHT_ENCODER_CH_B_GPIO,
     MOTOR_RIGHT},
   setInputModeSyncClient{"setInputModeSyncClientMotor_node"},
+  setPullUpSyncClient{"setPullUpSyncClientMotor_node"},
   setOutputModeSyncClient{"setOutputModeSyncClientMotor_node"},
   setEncoderCallbackSyncClient{"setEncoderCallbackSyncClientMotor_node"},
   setPwmFrequencySyncClient{"setPwmFrequencySyncClientMotor_node"}
@@ -42,6 +43,7 @@ MotorControl::MotorControl()
 LifecycleCallbackReturn_t MotorControl::on_configure(const rclcpp_lifecycle::State & previous_state)
 {
   setInputModeSyncClient.init("hal_pigpioSetInputMode");
+  setPullUpSyncClient.init("hal_pigpioSetPullUp");
   setOutputModeSyncClient.init("hal_pigpioSetOutputMode");
   setEncoderCallbackSyncClient.init("hal_pigpioSetEncoderCallback");
   setPwmFrequencySyncClient.init("hal_pigpioSetPwmFrequency");
@@ -117,11 +119,11 @@ void MotorControl::activatePublisher(void)
 void MotorControl::configureMotors(void)
 {
   motorLeft.configureGpios(
-    setOutputModeSyncClient, setInputModeSyncClient, setEncoderCallbackSyncClient,
-    setPwmFrequencySyncClient);
+    setOutputModeSyncClient, setPullUpSyncClient, setInputModeSyncClient,
+    setEncoderCallbackSyncClient, setPwmFrequencySyncClient);
   motorRight.configureGpios(
-    setOutputModeSyncClient, setInputModeSyncClient, setEncoderCallbackSyncClient,
-    setPwmFrequencySyncClient);
+    setOutputModeSyncClient, setPullUpSyncClient, setInputModeSyncClient,
+    setEncoderCallbackSyncClient, setPwmFrequencySyncClient);
 }
 
 void MotorControl::pigpioEncoderCountCallback(
@@ -142,8 +144,15 @@ void MotorControl::wheelsVelocityCmdCallback(const HalMotorControlCommandMsg_t &
 {
   uint8_t leftPwmDutycycle =
     static_cast<uint8_t>(std::abs(msg.motor_left_velocity_command) * M_PER_S_TO_DUTYCYCLE);
+  if (leftPwmDutycycle >= 256) {
+    leftPwmDutycycle = 255;
+  }
+
   uint8_t rightPwmDutycycle =
     static_cast<uint8_t>(std::abs(msg.motor_right_velocity_command) * M_PER_S_TO_DUTYCYCLE);
+  if (rightPwmDutycycle >= 256) {
+    rightPwmDutycycle = 255;
+  }
 
   auto leftDirection = forward;
   auto rightDirection = forward;

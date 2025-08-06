@@ -38,6 +38,7 @@ private:
   Motor motorRight;
 
   setInputModeSyncClientNode_t setInputModeSyncClient;
+  setPullUpSyncClientNode_t setPullUpSyncClient;
   setOutputModeSyncClientNode_t setOutputModeSyncClient;
   setEncoderCallbackSyncClientNode_t setEncoderCallbackSyncClient;
   setPwmFrequencySyncClientNode_t setPwmFrequencySyncClient;

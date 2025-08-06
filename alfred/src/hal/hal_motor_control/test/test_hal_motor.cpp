@@ -37,6 +37,7 @@ MotorCheckerNode::MotorCheckerNode()
   setPwmDutycycleClient{
     this->create_client<HalPigpioSetPwmDutycycle_t>("hal_pigpioSetPwmDutycycle")},
   setInputModeClient{"setInputModeSyncClientMotorChecker_node"},
+  setPullUpClient{"setPullUpSyncClientMotorChecker_node"},
   setOutputModeClient{"setOutputModeSyncClientMotorChecker_node"},
   setEncoderCallbackClient{"setEncoderCallbackSyncClientMotorChecker_node"},
   setPwmFrequencyClient{"setPwmFrequencySyncClientMotorChecker_node"}
@@ -60,15 +61,17 @@ TEST_F(MotorTest, ConfigureGpios)
 {
   std::function<void(
       setOutputModeSyncClientNode_t,
+      setPullUpSyncClientNode_t,
       setInputModeSyncClientNode_t,
       setEncoderCallbackSyncClientNode_t,
       setPwmFrequencySyncClientNode_t)> configureGpios = std::bind(
-    &Motor::configureGpios, motor->motorOk, _1, _2, _3, _4);
+    &Motor::configureGpios, motor->motorOk, _1, _2, _3, _4, _5);
 
   auto future = std::async(
     std::launch::async,
     configureGpios,
     motorChecker->setOutputModeClient,
+    motorChecker->setPullUpClient,
     motorChecker->setInputModeClient,
     motorChecker->setEncoderCallbackClient,
     motorChecker->setPwmFrequencyClient);
@@ -91,15 +94,17 @@ TEST_F(MotorTest, SetPwmDutyCycleAndDirectionForward)
 {
   std::function<void(
       setOutputModeSyncClientNode_t,
+      setPullUpSyncClientNode_t,
       setInputModeSyncClientNode_t,
       setEncoderCallbackSyncClientNode_t,
       setPwmFrequencySyncClientNode_t)> configureGpios = std::bind(
-    &Motor::configureGpios, motor->motorOk, _1, _2, _3, _4);
+    &Motor::configureGpios, motor->motorOk, _1, _2, _3, _4, _5);
 
   auto future = std::async(
     std::launch::async,
     configureGpios,
     motorChecker->setOutputModeClient,
+    motorChecker->setPullUpClient,
     motorChecker->setInputModeClient,
     motorChecker->setEncoderCallbackClient,
     motorChecker->setPwmFrequencyClient);
@@ -116,22 +121,24 @@ TEST_F(MotorTest, SetPwmDutyCycleAndDirectionForward)
   executor.spin_some();
 
   ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, GPIO_PWM_CHANNEL_A_M1), 20);
-  ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, GPIO_PWM_CHANNEL_B_M1), 20);
+  ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, GPIO_PWM_CHANNEL_B_M1), 0);
 }
 
 TEST_F(MotorTest, SetPwmDutyCycleAndDirectionBackward)
 {
   std::function<void(
       setOutputModeSyncClientNode_t,
+      setPullUpSyncClientNode_t,
       setInputModeSyncClientNode_t,
       setEncoderCallbackSyncClientNode_t,
       setPwmFrequencySyncClientNode_t)> configureGpios = std::bind(
-    &Motor::configureGpios, motor->motorOk, _1, _2, _3, _4);
+    &Motor::configureGpios, motor->motorOk, _1, _2, _3, _4, _5);
 
   auto future = std::async(
     std::launch::async,
     configureGpios,
     motorChecker->setOutputModeClient,
+    motorChecker->setPullUpClient,
     motorChecker->setInputModeClient,
     motorChecker->setEncoderCallbackClient,
     motorChecker->setPwmFrequencyClient);

@@ -49,6 +49,7 @@ public:
   ~MotorCheckerNode() = default;
 
   setOutputModeSyncClientNode_t setOutputModeClient;
+  setPullUpSyncClientNode_t setPullUpClient;
   setInputModeSyncClientNode_t setInputModeClient;
   setEncoderCallbackSyncClientNode_t setEncoderCallbackClient;
   setPwmFrequencySyncClientNode_t setPwmFrequencyClient;
@@ -76,6 +77,7 @@ protected:
     executor.add_node(pigpioDummy);
 
     motorChecker->setInputModeClient.init("hal_pigpioSetInputMode");
+    motorChecker->setPullUpClient.init("hal_pigpioSetPullUp");
     motorChecker->setOutputModeClient.init("hal_pigpioSetOutputMode");
     motorChecker->setEncoderCallbackClient.init("hal_pigpioSetEncoderCallback");
     motorChecker->setPwmFrequencyClient.init("hal_pigpioSetPwmFrequency");

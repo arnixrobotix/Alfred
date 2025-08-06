@@ -23,6 +23,7 @@ namespace motor
 {
 
 using setInputModeSyncClientNode_t = ServiceNodeSync<HalPigpioSetInputMode_t>;
+using setPullUpSyncClientNode_t = ServiceNodeSync<HalPigpioSetPullUp_t>;
 using setOutputModeSyncClientNode_t = ServiceNodeSync<HalPigpioSetOutputMode_t>;
 using setEncoderCallbackSyncClientNode_t = ServiceNodeSync<HalPigpioSetEncoderCallback_t>;
 using setPwmFrequencySyncClientNode_t = ServiceNodeSync<HalPigpioSetPwmFrequency_t>;
@@ -68,6 +69,7 @@ public:
     bool isDirectionForward);
   void configureGpios(
     setOutputModeSyncClientNode_t gpioSetOutputModeClient,
+    setPullUpSyncClientNode_t gpioSetPullUpClient,
     setInputModeSyncClientNode_t gpioSetInputModeClient,
     setEncoderCallbackSyncClientNode_t gpioSetEncoderCallbackClient,
     setPwmFrequencySyncClientNode_t gpioSetPwmFrequencyClient);

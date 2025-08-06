@@ -46,6 +46,7 @@ public:
   int32_t callbackId;
 
   rclcpp::Service<HalPigpioSetInputMode_t>::SharedPtr setInputModeService;
+  rclcpp::Service<HalPigpioSetPullUp_t>::SharedPtr setPullUpService;
   rclcpp::Service<HalPigpioSetOutputMode_t>::SharedPtr setOutputModeService;
   rclcpp::Service<HalPigpioSetPwmDutycycle_t>::SharedPtr setPwmDutycycleService;
   rclcpp::Service<HalPigpioSetPwmFrequency_t>::SharedPtr setPwmFrequencyService;
@@ -54,6 +55,9 @@ public:
   void setInputMode(
     const std::shared_ptr<HalPigpioSetInputMode_t::Request> request,
     std::shared_ptr<HalPigpioSetInputMode_t::Response> response);
+  void setPullUp(
+    const std::shared_ptr<HalPigpioSetPullUp_t::Request> request,
+    std::shared_ptr<HalPigpioSetPullUp_t::Response> response);
   void setOutputMode(
     const std::shared_ptr<HalPigpioSetOutputMode_t::Request> request,
     std::shared_ptr<HalPigpioSetOutputMode_t::Response> response);

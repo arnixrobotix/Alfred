@@ -29,6 +29,8 @@ HalPigpioDummyNode::HalPigpioDummyNode()
   callbackId{pigif_bad_callback},
   setInputModeService{this->create_service<HalPigpioSetInputMode_t>(
       "hal_pigpioSetInputMode", std::bind(&HalPigpioDummyNode::setInputMode, this, _1, _2))},
+  setPullUpService{this->create_service<HalPigpioSetPullUp_t>(
+      "hal_pigpioSetPullUp", std::bind(&HalPigpioDummyNode::setPullUp, this, _1, _2))},
   setOutputModeService{this->create_service<HalPigpioSetOutputMode_t>(
       "hal_pigpioSetOutputMode", std::bind(&HalPigpioDummyNode::setOutputMode, this, _1, _2))},
   setPwmDutycycleService{this->create_service<HalPigpioSetPwmDutycycle_t>(
@@ -55,6 +57,17 @@ void HalPigpioDummyNode::setInputMode(
   std::shared_ptr<HalPigpioSetInputMode_t::Response> response)
 {
   if (set_mode(piHandle, request->gpio_id, PI_INPUT) == 0) {
+    response->has_succeeded = true;
+  } else {
+    response->has_succeeded = false;
+  }
+}
+
+void HalPigpioDummyNode::setPullUp(
+  const std::shared_ptr<HalPigpioSetPullUp_t::Request> request,
+  std::shared_ptr<HalPigpioSetPullUp_t::Response> response)
+{
+  if (set_pull_up_down(piHandle, request->gpio_id, PI_PUD_UP) == 0) {
     response->has_succeeded = true;
   } else {
     response->has_succeeded = false;
