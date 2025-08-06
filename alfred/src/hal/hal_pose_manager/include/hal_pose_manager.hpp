@@ -39,6 +39,7 @@ namespace pose_manager
 constexpr double EncoderCountToRadians = 2.0 * M_PI / 48960.0;
 constexpr double wheelRadius_m = 0.0375;
 constexpr double robotWidth_m = 0.15;
+constexpr double encoderCountPerMsToRadPerS = EncoderCountToRadians * 1000000.0;
 
 using ImuDataMsg_t = sensor_msgs::msg::Imu;
 using OdometryMsg_t = nav_msgs::msg::Odometry;
@@ -79,12 +80,14 @@ private:
   rclcpp::Subscription<TwistMsg_t>::SharedPtr twistSubscriber;
   rclcpp::Subscription<HalMotorControlEncodersMsg_t>::SharedPtr motorsECSubscriber;
   rclcpp::Subscription<ImuDataMsg_t>::SharedPtr imuSubscriber;
+  rclcpp::Subscription<PointMsg_t>::SharedPtr positionSubscriber;
 
   EncodersCount prevEncoderCount;
+  Point prevPosition;
+  uint64_t prevTimestampNs;
   WheelsVelocity wheelsVelocity;
   QuaternionMsg_t orientation;
   Vector3Msg_t angularVelocity;
-  Point position_;
   double heading;
 
 public:
@@ -98,10 +101,13 @@ public:
   LifecycleCallbackReturn_t on_shutdown(const rclcpp_lifecycle::State & previous_state);
   LifecycleCallbackReturn_t on_error(const rclcpp_lifecycle::State & previous_state);
 
-  void computeAndPublishwheelsVelocityCmd(const TwistMsg_t & msg);
+  void computeAndPublishwheelsVelocityCmd(const PointMsg_t & msg);
   void publishOdometry(const HalMotorControlEncodersMsg_t & msg);
   void imuDataReader(const ImuDataMsg_t & msg);
-  void computePosition(int32_t leftEncoderCount, int32_t rightEncoderCount);
+  void computePosition(PointMsg_t & position, const HalMotorControlEncodersMsg_t & encoderMessage);
+  void computeLinearVelocities(
+    const PointMsg_t & position, TwistMsg_t & twist,
+    const HalMotorControlEncodersMsg_t & encoderMessage);
 };
 
 }  // namespace pose_manager

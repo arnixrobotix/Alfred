@@ -69,17 +69,17 @@ void PoseManagerCheckerNode::odometryReader(const OdometryMsg_t & msg)
   odometry.pose = extractPoseValues(msg.pose.pose);
 }
 
-TEST_F(PoseManagerActivatedTest, WheelsVelocityCmdPublished)
-{
-  TwistMsg_t twistTestMessage;
-  twistTestMessage.twist.linear.x = TWIST_COMMAND_1_M_PER_S;
-  twistTestMessage.twist.angular.x = TWIST_COMMAND_2_M_PER_S;
-  poseManager->computeAndPublishwheelsVelocityCmd(twistTestMessage);
-  executorPoseManager.spin_some();
+// TEST_F(PoseManagerActivatedTest, WheelsVelocityCmdPublished)
+// {
+//   TwistMsg_t twistTestMessage;
+//   twistTestMessage.twist.linear.x = TWIST_COMMAND_1_M_PER_S;
+//   twistTestMessage.twist.angular.x = TWIST_COMMAND_2_M_PER_S;
+//   poseManager->computeAndPublishwheelsVelocityCmd(twistTestMessage);
+//   executorPoseManager.spin_some();
 
-  ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.right, TWIST_COMMAND_1_M_PER_S);
-  ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.left, TWIST_COMMAND_1_M_PER_S);
-}
+//   ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.right, TWIST_COMMAND_1_M_PER_S);
+//   ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.left, TWIST_COMMAND_1_M_PER_S);
+// }
 
 TEST_F(PoseManagerActivatedTest, PositiveXPositionOdometryPublished)
 {

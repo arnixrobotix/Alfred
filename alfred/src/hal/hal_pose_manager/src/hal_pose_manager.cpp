@@ -24,10 +24,11 @@ using namespace std::placeholders;
 HalPoseManager::HalPoseManager()
 : rclcpp_lifecycle::LifecycleNode{"hal_pose_manager_node"},
   prevEncoderCount{.right = 0, .left = 0},
+  prevPosition{0.0, 0.0, 0.0},
+  prevTimestampNs{0},
   wheelsVelocity{.right = 0.0, .left = 0.0},
   orientation{QuaternionMsg_t()},
   angularVelocity{Vector3Msg_t()},
-  position_{0.0, 0.0, 0.0},
   heading{0.0}
 {
 }
@@ -38,8 +39,11 @@ LifecycleCallbackReturn_t HalPoseManager::on_configure(
   odometryPublisher = this->create_publisher<OdometryMsg_t>("odometry", 10);
   wheelsVelocityCmdPublisher = this->create_publisher<HalMotorControlCommandMsg_t>(
     "wheelsVelocityCmd", 10);
-  twistSubscriber = this->create_subscription<TwistMsg_t>(
-    "cmd_velocity", 10, std::bind(&HalPoseManager::computeAndPublishwheelsVelocityCmd, this, _1));
+  // twistSubscriber = this->create_subscription<TwistMsg_t>(
+  //   "cmd_velocity", 10, std::bind(&HalPoseManager::computeAndPublishwheelsVelocityCmd,
+  //    this, _1));
+  positionSubscriber = this->create_subscription<PointMsg_t>(
+    "cmd_position", 10, std::bind(&HalPoseManager::computeAndPublishwheelsVelocityCmd, this, _1));
   motorsECSubscriber = this->create_subscription<HalMotorControlEncodersMsg_t>(
     "motorsEncoderCountValue", 10,
     std::bind(&HalPoseManager::publishOdometry, this, _1));
@@ -103,12 +107,19 @@ LifecycleCallbackReturn_t HalPoseManager::on_error(const rclcpp_lifecycle::State
   return LifecycleCallbackReturn_t::FAILURE;
 }
 
-void HalPoseManager::computeAndPublishwheelsVelocityCmd(const TwistMsg_t & msg)
+void HalPoseManager::computeAndPublishwheelsVelocityCmd(const PointMsg_t & msg)
 {
   auto wheelsVelocityCommandMsg = HalMotorControlCommandMsg_t();
 
-  wheelsVelocityCommandMsg.motor_left_velocity_command = msg.twist.linear.x;
-  wheelsVelocityCommandMsg.motor_right_velocity_command = msg.twist.linear.x;
+  auto desiredPosition = msg.x;
+
+  auto wheelsVelocityCommand = (desiredPosition - prevPosition.x) * 0.1 - angularVelocity.y * 0.1;
+  wheelsVelocityCommandMsg.motor_left_velocity_command = wheelsVelocityCommand;
+  wheelsVelocityCommandMsg.motor_right_velocity_command = wheelsVelocityCommand;
+
+  RCLCPP_INFO(
+    get_logger(), "Position error: %f Velocity command: %f",
+    (desiredPosition - prevPosition.x), wheelsVelocityCommand);
 
   wheelsVelocityCmdPublisher->publish(wheelsVelocityCommandMsg);
 }
@@ -119,13 +130,16 @@ void HalPoseManager::imuDataReader(const ImuDataMsg_t & msg)
   angularVelocity = msg.angular_velocity;
 }
 
-void HalPoseManager::computePosition(int32_t leftEncoderCount, int32_t rightEncoderCount)
+void HalPoseManager::computePosition(
+  PointMsg_t & position,
+  const HalMotorControlEncodersMsg_t & encoderMessage)
 {
-  int32_t encoderCountDeltaLeft = leftEncoderCount - prevEncoderCount.left;
-  prevEncoderCount.left = leftEncoderCount;
+  int32_t encoderCountDeltaLeft = encoderMessage.motor_left_encoder_count - prevEncoderCount.left;
+  prevEncoderCount.left = encoderMessage.motor_left_encoder_count;
 
-  int32_t encoderCountDeltaRight = rightEncoderCount - prevEncoderCount.right;
-  prevEncoderCount.right = rightEncoderCount;
+  int32_t encoderCountDeltaRight = encoderMessage.motor_right_encoder_count -
+    prevEncoderCount.right;
+  prevEncoderCount.right = encoderMessage.motor_right_encoder_count;
 
   double angle = wheelRadius_m / robotWidth_m *
     (encoderCountDeltaRight - encoderCountDeltaLeft) * EncoderCountToRadians;
@@ -138,8 +152,21 @@ void HalPoseManager::computePosition(int32_t leftEncoderCount, int32_t rightEnco
   double deltaX = distance * std::cos(heading);
   double deltaY = distance * std::sin(heading);
 
-  position_.x += deltaX;
-  position_.y += deltaY;
+  position.x = prevPosition.x + deltaX;
+  position.y = prevPosition.y + deltaY;
+}
+
+void HalPoseManager::computeLinearVelocities(
+  const PointMsg_t & position, TwistMsg_t & twist,
+  const HalMotorControlEncodersMsg_t & encoderMessage)
+{
+  uint64_t timestampNs = encoderMessage.header.stamp.nanosec + encoderMessage.header.stamp.sec *
+    1000000000;
+  float timeDeltaS = (prevTimestampNs - timestampNs) / 1000000000.0;
+  prevTimestampNs = timestampNs;
+
+  twist.twist.linear.x = (position.x - prevPosition.x) / timeDeltaS;
+  twist.twist.linear.y = (position.y - prevPosition.y) / timeDeltaS;
 }
 
 void HalPoseManager::publishOdometry(const HalMotorControlEncodersMsg_t & msg)
@@ -156,14 +183,14 @@ void HalPoseManager::publishOdometry(const HalMotorControlEncodersMsg_t & msg)
   // This frame is attached to the motors, so only the pendulum movement happens in it,
   // i.e. the rotation of the body around the axis of the motors
 
-  twist.twist.angular.x = angularVelocity.x;
-  odometry.twist = std::move(twist);
+  computePosition(position, msg);
+  computeLinearVelocities(position, twist, msg);
 
-  computePosition(msg.motor_left_encoder_count, msg.motor_right_encoder_count);
-
-  position.x = position_.x;
-  position.y = position_.y;
+  prevPosition.x = position.x;
+  prevPosition.y = position.y;
   pose.pose.position = std::move(position);
+
+  odometry.twist = std::move(twist);
 
   // Orientation from IMU is already expressed in World frame
   pose.pose.orientation = orientation;
