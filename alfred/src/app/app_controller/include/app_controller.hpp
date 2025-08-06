@@ -30,12 +30,18 @@ namespace controller
 using OdometryMsg_t = nav_msgs::msg::Odometry;
 using PoseMsg_t = geometry_msgs::msg::PoseWithCovariance;
 using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
+using PointMsg_t = geometry_msgs::msg::Point;
 
 class Controller : public rclcpp_lifecycle::LifecycleNode
 {
 private:
   rclcpp::Subscription<OdometryMsg_t>::SharedPtr odometrySubscriber;
   rclcpp_lifecycle::LifecyclePublisher<TwistMsg_t>::SharedPtr twistPublisher;
+  rclcpp_lifecycle::LifecyclePublisher<PointMsg_t>::SharedPtr commandPublisher;
+
+  float previousCommand;
+  float previousError;
+  float position;
 
 public:
   Controller();
@@ -49,6 +55,7 @@ public:
   LifecycleCallbackReturn_t on_error(const rclcpp_lifecycle::State & previous_state);
 
   void odometryReader(const OdometryMsg_t & msg);
+  void publishCommand(void);
 };
 
 }  // namespace controller

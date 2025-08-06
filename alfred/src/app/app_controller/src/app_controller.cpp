@@ -33,6 +33,7 @@ LifecycleCallbackReturn_t Controller::on_configure(
     "odometry", 10, std::bind(&Controller::odometryReader, this, _1));
 
   twistPublisher = this->create_publisher<TwistMsg_t>("cmd_velocity", 10);
+  commandPublisher = this->create_publisher<PointMsg_t>("cmd_position", 10);
 
   RCLCPP_INFO(get_logger(), "Node configured!");
 
@@ -43,6 +44,7 @@ LifecycleCallbackReturn_t Controller::on_activate(
   const rclcpp_lifecycle::State & previous_state)
 {
   twistPublisher->on_activate();
+  commandPublisher->on_activate();
 
   RCLCPP_INFO(get_logger(), "Node activated!");
 
@@ -53,6 +55,7 @@ LifecycleCallbackReturn_t Controller::on_deactivate(
   const rclcpp_lifecycle::State & previous_state)
 {
   twistPublisher->on_deactivate();
+  commandPublisher->on_deactivate();
 
   RCLCPP_INFO(get_logger(), "Node deactivated!");
 
@@ -64,6 +67,7 @@ LifecycleCallbackReturn_t Controller::on_cleanup(
 {
   odometrySubscriber.reset();
   twistPublisher.reset();
+  commandPublisher.reset();
 
   RCLCPP_INFO(get_logger(), "Node unconfigured!");
 
@@ -75,6 +79,7 @@ LifecycleCallbackReturn_t Controller::on_shutdown(
 {
   odometrySubscriber.reset();
   twistPublisher.reset();
+  commandPublisher.reset();
 
   RCLCPP_INFO(get_logger(), "Node shutdown!");
 
@@ -106,7 +111,26 @@ void Controller::odometryReader(const OdometryMsg_t & msg)
   float quadrantPsi = 2 * (quaternion.w * quaternion.w + quaternion.x * quaternion.x) - 1;
   auto psi = std::atan2(tanPsi, quadrantPsi) * 180 / M_PI;
 
-  RCLCPP_INFO(get_logger(), "Phi: %f, Theta: %f, Psi: %f", phi, theta, psi);
+  position = msg.pose.pose.position.x;
+
+  // RCLCPP_INFO(
+  //  get_logger(), "Position: %f, Phi: %f, Theta: %f, Psi: %f", position, phi, theta, psi);
+
+  publishCommand();
+}
+
+void Controller::publishCommand(void)
+{
+  PointMsg_t positionCommand;
+
+  float desiredPosition = 0.0;
+
+  float error = desiredPosition - position;
+  float command = -6.0 * error + 5.925 * previousError + 0.9501 * previousCommand;
+
+  positionCommand.x = command;
+
+  commandPublisher->publish(positionCommand);
 }
 
 }  // namespace controller
