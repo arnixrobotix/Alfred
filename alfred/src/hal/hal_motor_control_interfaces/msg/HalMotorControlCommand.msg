@@ -1,4 +1,4 @@
 std_msgs/Header header
 
-float64 motor_left_velocity_command
-float64 motor_right_velocity_command
+float64 motor_left_command
+float64 motor_right_command

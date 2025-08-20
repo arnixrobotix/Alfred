@@ -178,7 +178,7 @@ TEST_F(MotorControlTest, setPwmRightBackward)
   ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_RIGHT_PWM_B_GPIO), 20);
 }
 
-TEST_F(MotorControlTest, wheelsVelocityCmdCallback)
+TEST_F(MotorControlTest, wheelsCmdCallback)
 {
   std::function<void()> configureMotors = std::bind(
     &MotorControl::configureMotors, motorControl);
@@ -194,8 +194,8 @@ TEST_F(MotorControlTest, wheelsVelocityCmdCallback)
   }
 
   auto message = HalMotorControlCommandMsg_t();
-  message.motor_left_velocity_command = 0.6;
-  message.motor_right_velocity_command = -0.6;
+  message.motor_left_command = 0.095;
+  message.motor_right_command = -0.095;
 
   const HalMotorControlCommandMsg_t & messageReceived = message;
 
@@ -206,11 +206,11 @@ TEST_F(MotorControlTest, wheelsVelocityCmdCallback)
   executor.spin_some();
   executor.spin_some();
 
-  ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_LEFT_PWM_A_GPIO), 81);
+  ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_LEFT_PWM_A_GPIO), 100);
   ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_LEFT_PWM_B_GPIO), 0);
 
   ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_RIGHT_PWM_A_GPIO), 0);
-  ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_RIGHT_PWM_B_GPIO), 81);
+  ASSERT_EQ(get_PWM_dutycycle(pigpioDummy->piHandle, MOTOR_RIGHT_PWM_B_GPIO), 100);
 }
 
 TEST_F(MotorControlTest, encoderCountCallbackAndPublishMessageSuccess)

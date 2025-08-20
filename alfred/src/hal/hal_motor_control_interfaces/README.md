@@ -4,7 +4,7 @@
 
 This interface package defines:
 - The following messages:
-    - `HalMotorControlCommand` that contains motors' velocity commands.
+    - `HalMotorControlCommand` that contains motors' commands.
     - `HalMotorControlEncoders` that contains processed encoder count values.
 
 ## Interfaces

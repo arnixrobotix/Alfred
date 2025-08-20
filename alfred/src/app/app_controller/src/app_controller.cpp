@@ -32,8 +32,7 @@ LifecycleCallbackReturn_t Controller::on_configure(
   odometrySubscriber = this->create_subscription<OdometryMsg_t>(
     "odometry", 10, std::bind(&Controller::odometryReader, this, _1));
 
-  twistPublisher = this->create_publisher<TwistMsg_t>("cmd_velocity", 10);
-  commandPublisher = this->create_publisher<PointMsg_t>("cmd_position", 10);
+  commandPublisher = this->create_publisher<WrenchMsg_t>("cmd_torque", 10);
 
   RCLCPP_INFO(get_logger(), "Node configured!");
 
@@ -43,7 +42,6 @@ LifecycleCallbackReturn_t Controller::on_configure(
 LifecycleCallbackReturn_t Controller::on_activate(
   const rclcpp_lifecycle::State & previous_state)
 {
-  twistPublisher->on_activate();
   commandPublisher->on_activate();
 
   RCLCPP_INFO(get_logger(), "Node activated!");
@@ -54,7 +52,6 @@ LifecycleCallbackReturn_t Controller::on_activate(
 LifecycleCallbackReturn_t Controller::on_deactivate(
   const rclcpp_lifecycle::State & previous_state)
 {
-  twistPublisher->on_deactivate();
   commandPublisher->on_deactivate();
 
   RCLCPP_INFO(get_logger(), "Node deactivated!");
@@ -66,7 +63,6 @@ LifecycleCallbackReturn_t Controller::on_cleanup(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometrySubscriber.reset();
-  twistPublisher.reset();
   commandPublisher.reset();
 
   RCLCPP_INFO(get_logger(), "Node unconfigured!");
@@ -78,7 +74,6 @@ LifecycleCallbackReturn_t Controller::on_shutdown(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometrySubscriber.reset();
-  twistPublisher.reset();
   commandPublisher.reset();
 
   RCLCPP_INFO(get_logger(), "Node shutdown!");
@@ -97,40 +92,51 @@ void Controller::odometryReader(const OdometryMsg_t & msg)
   Quaternion quaternion{msg.pose.pose.orientation.w, msg.pose.pose.orientation.x,
     msg.pose.pose.orientation.y, msg.pose.pose.orientation.z};
 
-  // phi (sensor's x-axis rotation)
-  float tanPhi = 2 * (quaternion.y * quaternion.z - quaternion.w * quaternion.x);
-  float quadrantPhi = 2 * (quaternion.w * quaternion.w + quaternion.z * quaternion.z) - 1;
-  auto phi = std::atan2(tanPhi, quadrantPhi) * 180 / M_PI;
+  // pitch (sensor's x-axis rotation)
+  float tanPitch = 2 * (quaternion.y * quaternion.z - quaternion.w * quaternion.x);
+  float quadrantPitch = 2 * (quaternion.w * quaternion.w + quaternion.z * quaternion.z) - 1;
+  auto pitch = std::atan2(tanPitch, quadrantPitch);
 
-  // theta (sensor's y-axis rotation)
-  float sinTheta = 2 * (quaternion.x * quaternion.z + quaternion.w * quaternion.y);
-  auto theta = -std::asin(sinTheta) * 180 / M_PI;
+  // roll (sensor's y-axis rotation)
+  float sinRoll = 2 * (quaternion.x * quaternion.z + quaternion.w * quaternion.y);
+  auto roll = std::asin(sinRoll);
 
-  // psi (sensor's z-axis rotation)
-  float tanPsi = 2 * (quaternion.x * quaternion.y - quaternion.w * quaternion.z);
-  float quadrantPsi = 2 * (quaternion.w * quaternion.w + quaternion.x * quaternion.x) - 1;
-  auto psi = std::atan2(tanPsi, quadrantPsi) * 180 / M_PI;
+  // yaw (sensor's z-axis rotation)
+  float tanYaw = 2 * (quaternion.x * quaternion.y - quaternion.w * quaternion.z);
+  float quadrantYaw = 2 * (quaternion.w * quaternion.w + quaternion.x * quaternion.x) - 1;
+  auto yaw = std::atan2(tanYaw, quadrantYaw);
 
-  position = msg.pose.pose.position.x;
+  RCLCPP_INFO(
+    get_logger(), "Pitch: %f, Roll: %f, Yaw: %f", pitch * 180 / M_PI, roll * 180 / M_PI,
+    yaw * 180 / M_PI);
 
-  // RCLCPP_INFO(
-  //  get_logger(), "Position: %f, Phi: %f, Theta: %f, Psi: %f", position, phi, theta, psi);
-
-  publishCommand();
+  computeAndPublishCommand(pitch);
 }
 
-void Controller::publishCommand(void)
+void Controller::computeAndPublishCommand(double angle)
 {
-  PointMsg_t positionCommand;
+  WrenchMsg_t command;
 
-  float desiredPosition = 0.0;
+  // Observer
+  static float theta_obs_prev = 0.0;
+  static float theta_dot_obs_prev = 0.0;
+  static float theta_error_sum = 0.0;
+  static float torque_prev = 0.0;
 
-  float error = desiredPosition - position;
-  float command = -6.0 * error + 5.925 * previousError + 0.9501 * previousCommand;
+  float theta_obs = 0.93758 * theta_obs_prev + 0.00097 * theta_dot_obs_prev - 0.00011 *
+    torque_prev + 0.0625 * angle;
+  float theta_dot_obs = -0.98973 * theta_obs_prev + 0.9995 * theta_dot_obs_prev - 0.22238 *
+    torque_prev + 1.1532 * angle;
+  theta_error_sum += angle;
+  float torque = 1.1926 * theta_obs + 0.08896 * theta_dot_obs + 0.7042 * theta_error_sum * 0.001;
 
-  positionCommand.x = command;
+  theta_obs_prev = theta_obs;
+  theta_dot_obs_prev = theta_dot_obs;
+  torque_prev = torque;
 
-  commandPublisher->publish(positionCommand);
+  command.torque.y = torque;  // Wheels' torque is around y-axis
+
+  commandPublisher->publish(command);
 }
 
 }  // namespace controller

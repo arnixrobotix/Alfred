@@ -37,13 +37,10 @@ LifecycleCallbackReturn_t HalPoseManager::on_configure(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher = this->create_publisher<OdometryMsg_t>("odometry", 10);
-  wheelsVelocityCmdPublisher = this->create_publisher<HalMotorControlCommandMsg_t>(
-    "wheelsVelocityCmd", 10);
-  // twistSubscriber = this->create_subscription<TwistMsg_t>(
-  //   "cmd_velocity", 10, std::bind(&HalPoseManager::computeAndPublishwheelsVelocityCmd,
-  //    this, _1));
-  positionSubscriber = this->create_subscription<PointMsg_t>(
-    "cmd_position", 10, std::bind(&HalPoseManager::computeAndPublishwheelsVelocityCmd, this, _1));
+  wheelsCmdPublisher = this->create_publisher<HalMotorControlCommandMsg_t>(
+    "wheelsCmd", 10);
+  torqueSubscriber = this->create_subscription<WrenchMsg_t>(
+    "cmd_torque", 10, std::bind(&HalPoseManager::computeAndPublishWheelsCmd, this, _1));
   motorsECSubscriber = this->create_subscription<HalMotorControlEncodersMsg_t>(
     "motorsEncoderCountValue", 10,
     std::bind(&HalPoseManager::publishOdometry, this, _1));
@@ -59,7 +56,7 @@ LifecycleCallbackReturn_t HalPoseManager::on_activate(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher->on_activate();
-  wheelsVelocityCmdPublisher->on_activate();
+  wheelsCmdPublisher->on_activate();
 
   RCLCPP_INFO(get_logger(), "Node activated!");
 
@@ -70,7 +67,7 @@ LifecycleCallbackReturn_t HalPoseManager::on_deactivate(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher->on_deactivate();
-  wheelsVelocityCmdPublisher->on_deactivate();
+  wheelsCmdPublisher->on_deactivate();
 
   RCLCPP_INFO(get_logger(), "Node deactivated!");
 
@@ -80,7 +77,7 @@ LifecycleCallbackReturn_t HalPoseManager::on_deactivate(
 LifecycleCallbackReturn_t HalPoseManager::on_cleanup(const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher.reset();
-  wheelsVelocityCmdPublisher.reset();
+  wheelsCmdPublisher.reset();
   twistSubscriber.reset();
   motorsECSubscriber.reset();
 
@@ -93,7 +90,7 @@ LifecycleCallbackReturn_t HalPoseManager::on_shutdown(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher.reset();
-  wheelsVelocityCmdPublisher.reset();
+  wheelsCmdPublisher.reset();
   twistSubscriber.reset();
   motorsECSubscriber.reset();
 
@@ -107,21 +104,16 @@ LifecycleCallbackReturn_t HalPoseManager::on_error(const rclcpp_lifecycle::State
   return LifecycleCallbackReturn_t::FAILURE;
 }
 
-void HalPoseManager::computeAndPublishwheelsVelocityCmd(const PointMsg_t & msg)
+void HalPoseManager::computeAndPublishWheelsCmd(const WrenchMsg_t & msg)
 {
-  auto wheelsVelocityCommandMsg = HalMotorControlCommandMsg_t();
+  auto wheelsCommandMsg = HalMotorControlCommandMsg_t();
 
-  auto desiredPosition = msg.x;
+  auto desiredTorque = msg.torque.y;
 
-  auto wheelsVelocityCommand = (desiredPosition - prevPosition.x) * 0.1 - angularVelocity.y * 0.1;
-  wheelsVelocityCommandMsg.motor_left_velocity_command = wheelsVelocityCommand;
-  wheelsVelocityCommandMsg.motor_right_velocity_command = wheelsVelocityCommand;
+  wheelsCommandMsg.motor_left_command = desiredTorque / 2.0;
+  wheelsCommandMsg.motor_right_command = desiredTorque / 2.0;
 
-  RCLCPP_INFO(
-    get_logger(), "Position error: %f Velocity command: %f",
-    (desiredPosition - prevPosition.x), wheelsVelocityCommand);
-
-  wheelsVelocityCmdPublisher->publish(wheelsVelocityCommandMsg);
+  wheelsCmdPublisher->publish(wheelsCommandMsg);
 }
 
 void HalPoseManager::imuDataReader(const ImuDataMsg_t & msg)

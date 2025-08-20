@@ -45,9 +45,9 @@ namespace motor
 #define MOTOR_RIGHT_ENCODER_CH_A_GPIO GPIO22
 #define MOTOR_RIGHT_ENCODER_CH_B_GPIO GPIO23
 
-#define MOTOR_PWM_FREQUENCY 1000
+#define MOTOR_PWM_FREQUENCY 10000
 
-#define M_PER_S_TO_DUTYCYCLE 136
+constexpr float torque_to_dutycycle = 255 / (0.344 * 0.7);
 
 using HalMotorControlEncodersMsg_t = hal_motor_control_interfaces::msg::HalMotorControlEncoders;
 using HalMotorControlCommandMsg_t = hal_motor_control_interfaces::msg::HalMotorControlCommand;

@@ -46,8 +46,8 @@ void PoseManagerCheckerNode::changePoseManagerNodeToState(std::uint8_t transitio
 
 void PoseManagerCheckerNode::wheelsVelocityCmdReader(const HalMotorControlCommandMsg_t & msg)
 {
-  wheelsVelocityCommand.left = msg.motor_left_velocity_command;
-  wheelsVelocityCommand.right = msg.motor_right_velocity_command;
+  wheelsVelocityCommand.left = msg.motor_left_command;
+  wheelsVelocityCommand.right = msg.motor_right_command;
 }
 
 void PoseManagerCheckerNode::odometryReader(const OdometryMsg_t & msg)

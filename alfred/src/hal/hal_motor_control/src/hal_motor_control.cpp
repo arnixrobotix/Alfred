@@ -142,31 +142,35 @@ void MotorControl::pigpioEncoderCountCallback(
 
 void MotorControl::wheelsVelocityCmdCallback(const HalMotorControlCommandMsg_t & msg)
 {
-  uint8_t leftPwmDutycycle =
-    static_cast<uint8_t>(std::abs(msg.motor_left_velocity_command) * M_PER_S_TO_DUTYCYCLE);
+  uint16_t leftPwmDutycycle =
+    static_cast<uint16_t>(std::abs(msg.motor_left_command) * torque_to_dutycycle);
   if (leftPwmDutycycle >= 256) {
     leftPwmDutycycle = 255;
   }
 
-  uint8_t rightPwmDutycycle =
-    static_cast<uint8_t>(std::abs(msg.motor_right_velocity_command) * M_PER_S_TO_DUTYCYCLE);
+  uint16_t rightPwmDutycycle =
+    static_cast<uint16_t>(std::abs(msg.motor_right_command) * torque_to_dutycycle);
   if (rightPwmDutycycle >= 256) {
     rightPwmDutycycle = 255;
   }
 
+  RCLCPP_INFO(
+    get_logger(), "Right dutycycle: %d, left dutycycle: %d", rightPwmDutycycle,
+    leftPwmDutycycle);
+
   auto leftDirection = forward;
   auto rightDirection = forward;
 
-  if (msg.motor_left_velocity_command < 0.0) {
+  if (msg.motor_left_command < 0.0) {
     leftDirection = backward;
   }
 
-  if (msg.motor_right_velocity_command < 0.0) {
+  if (msg.motor_right_command < 0.0) {
     rightDirection = backward;
   }
 
-  setPwmLeft(leftPwmDutycycle, leftDirection);
-  setPwmRight(rightPwmDutycycle, rightDirection);
+  setPwmLeft(static_cast<uint8_t>(leftPwmDutycycle), leftDirection);
+  setPwmRight(static_cast<uint8_t>(rightPwmDutycycle), rightDirection);
 }
 
 void MotorControl::publishMessage(void)

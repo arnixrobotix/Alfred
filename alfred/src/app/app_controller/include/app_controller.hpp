@@ -21,6 +21,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
+#include "geometry_msgs/msg/wrench.hpp"
 
 namespace app
 {
@@ -28,20 +29,16 @@ namespace controller
 {
 
 using OdometryMsg_t = nav_msgs::msg::Odometry;
-using PoseMsg_t = geometry_msgs::msg::PoseWithCovariance;
-using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
-using PointMsg_t = geometry_msgs::msg::Point;
+using WrenchMsg_t = geometry_msgs::msg::Wrench;
 
 class Controller : public rclcpp_lifecycle::LifecycleNode
 {
 private:
   rclcpp::Subscription<OdometryMsg_t>::SharedPtr odometrySubscriber;
-  rclcpp_lifecycle::LifecyclePublisher<TwistMsg_t>::SharedPtr twistPublisher;
-  rclcpp_lifecycle::LifecyclePublisher<PointMsg_t>::SharedPtr commandPublisher;
+  rclcpp_lifecycle::LifecyclePublisher<WrenchMsg_t>::SharedPtr commandPublisher;
 
   float previousCommand;
   float previousError;
-  float position;
 
 public:
   Controller();
@@ -55,7 +52,7 @@ public:
   LifecycleCallbackReturn_t on_error(const rclcpp_lifecycle::State & previous_state);
 
   void odometryReader(const OdometryMsg_t & msg);
-  void publishCommand(void);
+  void computeAndPublishCommand(double angle);
 };
 
 }  // namespace controller
