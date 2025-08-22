@@ -6,6 +6,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(hal_motor_control_interfaces REQUIRED)
 find_package(common_utils REQUIRED)
 
 ###########
@@ -20,15 +21,24 @@ set(dependencies
   rclcpp_lifecycle
   geometry_msgs
   nav_msgs
+  hal_motor_control_interfaces
   common_utils)
 
-add_library(${PROJECT_NAME} OBJECT src/app_controller.cpp)
-  ament_target_dependencies(${PROJECT_NAME} ${dependencies})
+add_library(${PROJECT_NAME}_stabilisation OBJECT src/app_controller_stabilisation.cpp)
+  ament_target_dependencies(${PROJECT_NAME}_stabilisation ${dependencies})
 
-add_executable(${PROJECT_NAME}_node
-  src/app_controller_node.cpp
-  $<TARGET_OBJECTS:${PROJECT_NAME}>)
-ament_target_dependencies(${PROJECT_NAME}_node ${dependencies})
+add_executable(${PROJECT_NAME}_stabilisation_node
+  src/app_controller_stabilisation_node.cpp
+  $<TARGET_OBJECTS:${PROJECT_NAME}_stabilisation>)
+ament_target_dependencies(${PROJECT_NAME}_stabilisation_node ${dependencies})
+
+add_library(${PROJECT_NAME}_movement OBJECT src/app_controller_movement.cpp)
+  ament_target_dependencies(${PROJECT_NAME}_movement ${dependencies})
+
+add_executable(${PROJECT_NAME}_movement_node
+  src/app_controller_movement_node.cpp
+  $<TARGET_OBJECTS:${PROJECT_NAME}_movement>)
+ament_target_dependencies(${PROJECT_NAME}_movement_node ${dependencies})
 
 #############
 ## Testing ##
@@ -40,14 +50,15 @@ if(BUILD_TESTING)
 
   ament_add_gtest(${PROJECT_NAME}_test test/test_app_controller.cpp)
   ament_target_dependencies(${PROJECT_NAME}_test ${dependencies})
-  target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
+  target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME}_stabilisation)
 endif()
 
 #############
 ## Install ##
 #############
 install(TARGETS
-  ${PROJECT_NAME}_node
+  ${PROJECT_NAME}_stabilisation_node
+  ${PROJECT_NAME}_movement_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

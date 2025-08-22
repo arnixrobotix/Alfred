@@ -27,12 +27,8 @@ PoseManagerCheckerNode::PoseManagerCheckerNode()
 : rclcpp::Node{"hal_pose_manager_checker_node"},
   changeStateClient{this->create_client<lifecycle_msgs::srv::ChangeState>(
       "hal_pose_manager_node/change_state")},
-  wheelsVelocityCmdSubscriber{this->create_subscription<HalMotorControlCommandMsg_t>(
-      "wheelsVelocityCmd", 10,
-      std::bind(&PoseManagerCheckerNode::wheelsVelocityCmdReader, this, _1))},
   odometrySubscriber{this->create_subscription<OdometryMsg_t>(
       "odometry", 10, std::bind(&PoseManagerCheckerNode::odometryReader, this, _1) )},
-  wheelsVelocityCommand{0.0, 0.0},
   odometry{{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}, {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0}}}
 {
 }
@@ -42,12 +38,6 @@ void PoseManagerCheckerNode::changePoseManagerNodeToState(std::uint8_t transitio
   auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
   request->transition.id = transition;
   auto result = changeStateClient->async_send_request(request);
-}
-
-void PoseManagerCheckerNode::wheelsVelocityCmdReader(const HalMotorControlCommandMsg_t & msg)
-{
-  wheelsVelocityCommand.left = msg.motor_left_command;
-  wheelsVelocityCommand.right = msg.motor_right_command;
 }
 
 void PoseManagerCheckerNode::odometryReader(const OdometryMsg_t & msg)
@@ -68,18 +58,6 @@ void PoseManagerCheckerNode::odometryReader(const OdometryMsg_t & msg)
   odometry.twist = extractTwistValues(msg.twist.twist);
   odometry.pose = extractPoseValues(msg.pose.pose);
 }
-
-// TEST_F(PoseManagerActivatedTest, WheelsVelocityCmdPublished)
-// {
-//   TwistMsg_t twistTestMessage;
-//   twistTestMessage.twist.linear.x = TWIST_COMMAND_1_M_PER_S;
-//   twistTestMessage.twist.angular.x = TWIST_COMMAND_2_M_PER_S;
-//   poseManager->computeAndPublishwheelsVelocityCmd(twistTestMessage);
-//   executorPoseManager.spin_some();
-
-//   ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.right, TWIST_COMMAND_1_M_PER_S);
-//   ASSERT_DOUBLE_EQ(poseManagerChecker->wheelsVelocityCommand.left, TWIST_COMMAND_1_M_PER_S);
-// }
 
 TEST_F(PoseManagerActivatedTest, PositiveXPositionOdometryPublished)
 {

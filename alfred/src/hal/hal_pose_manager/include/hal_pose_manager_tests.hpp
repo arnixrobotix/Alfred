@@ -42,15 +42,12 @@ public:
   ~PoseManagerCheckerNode() = default;
 
   rclcpp::Client<lifecycle_msgs::srv::ChangeState>::SharedPtr changeStateClient;
-  rclcpp::Subscription<HalMotorControlCommandMsg_t>::SharedPtr wheelsVelocityCmdSubscriber;
   rclcpp::Subscription<OdometryMsg_t>::SharedPtr odometrySubscriber;
 
   void changePoseManagerNodeToState(std::uint8_t transition);
 
-  void wheelsVelocityCmdReader(const HalMotorControlCommandMsg_t & msg);
   void odometryReader(const OdometryMsg_t & msg);
 
-  WheelsVelocity wheelsVelocityCommand;
   Odometry odometry;
 };
 

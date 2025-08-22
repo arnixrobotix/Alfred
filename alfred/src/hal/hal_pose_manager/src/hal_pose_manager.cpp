@@ -37,10 +37,6 @@ LifecycleCallbackReturn_t HalPoseManager::on_configure(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher = this->create_publisher<OdometryMsg_t>("odometry", 10);
-  wheelsCmdPublisher = this->create_publisher<HalMotorControlCommandMsg_t>(
-    "wheelsCmd", 10);
-  torqueSubscriber = this->create_subscription<WrenchMsg_t>(
-    "cmd_torque", 10, std::bind(&HalPoseManager::computeAndPublishWheelsCmd, this, _1));
   motorsECSubscriber = this->create_subscription<HalMotorControlEncodersMsg_t>(
     "motorsEncoderCountValue", 10,
     std::bind(&HalPoseManager::publishOdometry, this, _1));
@@ -56,7 +52,6 @@ LifecycleCallbackReturn_t HalPoseManager::on_activate(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher->on_activate();
-  wheelsCmdPublisher->on_activate();
 
   RCLCPP_INFO(get_logger(), "Node activated!");
 
@@ -67,7 +62,6 @@ LifecycleCallbackReturn_t HalPoseManager::on_deactivate(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher->on_deactivate();
-  wheelsCmdPublisher->on_deactivate();
 
   RCLCPP_INFO(get_logger(), "Node deactivated!");
 
@@ -77,8 +71,6 @@ LifecycleCallbackReturn_t HalPoseManager::on_deactivate(
 LifecycleCallbackReturn_t HalPoseManager::on_cleanup(const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher.reset();
-  wheelsCmdPublisher.reset();
-  twistSubscriber.reset();
   motorsECSubscriber.reset();
 
   RCLCPP_INFO(get_logger(), "Node unconfigured!");
@@ -90,8 +82,6 @@ LifecycleCallbackReturn_t HalPoseManager::on_shutdown(
   const rclcpp_lifecycle::State & previous_state)
 {
   odometryPublisher.reset();
-  wheelsCmdPublisher.reset();
-  twistSubscriber.reset();
   motorsECSubscriber.reset();
 
   RCLCPP_INFO(get_logger(), "Node shutdown!");
@@ -102,18 +92,6 @@ LifecycleCallbackReturn_t HalPoseManager::on_shutdown(
 LifecycleCallbackReturn_t HalPoseManager::on_error(const rclcpp_lifecycle::State & previous_state)
 {
   return LifecycleCallbackReturn_t::FAILURE;
-}
-
-void HalPoseManager::computeAndPublishWheelsCmd(const WrenchMsg_t & msg)
-{
-  auto wheelsCommandMsg = HalMotorControlCommandMsg_t();
-
-  auto desiredTorque = msg.torque.y;
-
-  wheelsCommandMsg.motor_left_command = desiredTorque / 2.0;
-  wheelsCommandMsg.motor_right_command = desiredTorque / 2.0;
-
-  wheelsCmdPublisher->publish(wheelsCommandMsg);
 }
 
 void HalPoseManager::imuDataReader(const ImuDataMsg_t & msg)

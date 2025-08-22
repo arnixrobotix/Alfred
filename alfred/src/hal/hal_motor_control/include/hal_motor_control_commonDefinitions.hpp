@@ -47,7 +47,13 @@ namespace motor
 
 #define MOTOR_PWM_FREQUENCY 10000
 
-constexpr float torque_to_dutycycle = 255 / (0.344 * 0.7);
+constexpr float Kc = 0.344;  // Nm/A
+constexpr float R = 21;  // Ohms
+constexpr float Vbat = 14.8;  // V
+constexpr float omega_nom = 30.89;  // rad/s
+constexpr float Ke = Vbat / omega_nom;  // V/(rad/s)
+constexpr float torque_to_voltage = R / Kc;
+constexpr float voltage_to_dutycycle = 255 / Vbat;
 
 using HalMotorControlEncodersMsg_t = hal_motor_control_interfaces::msg::HalMotorControlEncoders;
 using HalMotorControlCommandMsg_t = hal_motor_control_interfaces::msg::HalMotorControlCommand;

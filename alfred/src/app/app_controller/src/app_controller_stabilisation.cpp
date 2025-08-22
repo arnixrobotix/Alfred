@@ -32,7 +32,7 @@ LifecycleCallbackReturn_t Controller::on_configure(
   odometrySubscriber = this->create_subscription<OdometryMsg_t>(
     "odometry", 10, std::bind(&Controller::odometryReader, this, _1));
 
-  commandPublisher = this->create_publisher<WrenchMsg_t>("cmd_torque", 10);
+  commandPublisher = this->create_publisher<HalMotorControlCommandMsg_t>("cmd_torque", 10);
 
   RCLCPP_INFO(get_logger(), "Node configured!");
 
@@ -115,7 +115,7 @@ void Controller::odometryReader(const OdometryMsg_t & msg)
 
 void Controller::computeAndPublishCommand(double angle)
 {
-  WrenchMsg_t command;
+  HalMotorControlCommandMsg_t command;
 
   // Observer
   static float theta_obs_prev = 0.0;
@@ -123,18 +123,19 @@ void Controller::computeAndPublishCommand(double angle)
   static float theta_error_sum = 0.0;
   static float torque_prev = 0.0;
 
-  float theta_obs = 0.93758 * theta_obs_prev + 0.00097 * theta_dot_obs_prev - 0.00011 *
-    torque_prev + 0.0625 * angle;
-  float theta_dot_obs = -0.98973 * theta_obs_prev + 0.9995 * theta_dot_obs_prev - 0.22238 *
-    torque_prev + 1.1532 * angle;
-  theta_error_sum += angle;
-  float torque = 1.1926 * theta_obs + 0.08896 * theta_dot_obs + 0.7042 * theta_error_sum * 0.001;
+  float theta_obs = -0.7758 * theta_obs_prev + 0.002784 * theta_dot_obs_prev - 0.03122 *
+    torque_prev + 1.0812 * angle;
+  float theta_dot_obs = -45.5195 * theta_obs_prev + 0.6344 * theta_dot_obs_prev - 11.8724 *
+    torque_prev + 46.9097 * angle;
+  theta_error_sum -= angle;
+  float torque = 0.46837 * theta_obs + 0.02747 * theta_dot_obs + 1.4972 * theta_error_sum * 0.01;
 
   theta_obs_prev = theta_obs;
   theta_dot_obs_prev = theta_dot_obs;
   torque_prev = torque;
 
-  command.torque.y = torque;  // Wheels' torque is around y-axis
+  command.motor_left_command = torque / 2.0;
+  command.motor_right_command = torque / 2.0;
 
   commandPublisher->publish(command);
 }

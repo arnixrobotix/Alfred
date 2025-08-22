@@ -194,12 +194,12 @@ TEST_F(MotorControlTest, wheelsCmdCallback)
   }
 
   auto message = HalMotorControlCommandMsg_t();
-  message.motor_left_command = 0.095;
-  message.motor_right_command = -0.095;
+  message.motor_left_command = 0.0951;
+  message.motor_right_command = -0.0951;
 
   const HalMotorControlCommandMsg_t & messageReceived = message;
 
-  motorControl->wheelsVelocityCmdCallback(message);
+  motorControl->wheelsCmdCallback(message);
   // There are 4 calls to services
   executor.spin_some();
   executor.spin_some();

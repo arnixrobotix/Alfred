@@ -10,7 +10,7 @@ This package contains the motors' (`GA25-371`) driver. It consists of a [library
 
 The motors' encoders values are published in a [`HalMotorControlEncoders`](../hal_motor_control_interfaces/msg/HalMotorControlEncoders.msg) message on `motorsEncoderCountValue`.
 
-Velocity commands are received in a [`HalMotorControlCommand`](../hal_motor_control_interfaces/msg/HalMotorControlCommand.msg) message on `wheelsCmd`.
+Torque commands are received in a [`HalMotorControlCommand`](../hal_motor_control_interfaces/msg/HalMotorControlCommand.msg) message on `cmd_torque`.
 
 Raw encoder count values are received in a [`HalPigpioEncoderCount`](../hal_pigpio_interfaces/msg/HalPigpioEncoderCount.msg) message on `hal_pigpioEncoderCount`.
 

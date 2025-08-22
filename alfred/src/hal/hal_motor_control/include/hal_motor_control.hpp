@@ -67,7 +67,7 @@ public:
   void configureMotors(void);
   void publishMessage(void);
   void pigpioEncoderCountCallback(const HalPigpioEncoderCountMsg_t & msg);
-  void wheelsVelocityCmdCallback(const HalMotorControlCommandMsg_t & msg);
+  void wheelsCmdCallback(const HalMotorControlCommandMsg_t & msg);
   void setPwmLeft(uint8_t dutycycle, Direction direction);
   void setPwmRight(uint8_t dutycycle, Direction direction);
 };

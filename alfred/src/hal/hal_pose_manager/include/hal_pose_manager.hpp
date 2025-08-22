@@ -29,7 +29,6 @@
 #include "sensor_msgs/msg/imu.hpp"
 #include "std_msgs/msg/header.hpp"
 #include "hal_motor_control_interfaces/msg/hal_motor_control_encoders.hpp"
-#include "hal_motor_control_interfaces/msg/hal_motor_control_command.hpp"
 
 namespace hal
 {
@@ -49,10 +48,8 @@ using Vector3Msg_t = geometry_msgs::msg::Vector3;
 using PointMsg_t = geometry_msgs::msg::Point;
 using PoseMsg_t = geometry_msgs::msg::PoseWithCovariance;
 using TwistMsg_t = geometry_msgs::msg::TwistWithCovariance;
-using WrenchMsg_t = geometry_msgs::msg::Wrench;
 using HeaderMsg_t = std_msgs::msg::Header;
 using HalMotorControlEncodersMsg_t = hal_motor_control_interfaces::msg::HalMotorControlEncoders;
-using HalMotorControlCommandMsg_t = hal_motor_control_interfaces::msg::HalMotorControlCommand;
 
 struct EncodersCount
 {
@@ -77,12 +74,10 @@ class HalPoseManager : public rclcpp_lifecycle::LifecycleNode
 {
 private:
   rclcpp_lifecycle::LifecyclePublisher<OdometryMsg_t>::SharedPtr odometryPublisher;
-  rclcpp_lifecycle::LifecyclePublisher<HalMotorControlCommandMsg_t>::SharedPtr
-    wheelsCmdPublisher;
+
   rclcpp::Subscription<TwistMsg_t>::SharedPtr twistSubscriber;
   rclcpp::Subscription<HalMotorControlEncodersMsg_t>::SharedPtr motorsECSubscriber;
   rclcpp::Subscription<ImuDataMsg_t>::SharedPtr imuSubscriber;
-  rclcpp::Subscription<WrenchMsg_t>::SharedPtr torqueSubscriber;
 
   EncodersCount prevEncoderCount;
   Point prevPosition;
@@ -103,7 +98,6 @@ public:
   LifecycleCallbackReturn_t on_shutdown(const rclcpp_lifecycle::State & previous_state);
   LifecycleCallbackReturn_t on_error(const rclcpp_lifecycle::State & previous_state);
 
-  void computeAndPublishWheelsCmd(const WrenchMsg_t & msg);
   void publishOdometry(const HalMotorControlEncodersMsg_t & msg);
   void imuDataReader(const ImuDataMsg_t & msg);
   void computePosition(PointMsg_t & position, const HalMotorControlEncodersMsg_t & encoderMessage);

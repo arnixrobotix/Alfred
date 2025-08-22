@@ -57,7 +57,7 @@ LifecycleCallbackReturn_t MotorControl::on_configure(const rclcpp_lifecycle::Sta
   motorControlECSub = this->create_subscription<HalPigpioEncoderCountMsg_t>(
     "hal_pigpioEncoderCount", 10, std::bind(&MotorControl::pigpioEncoderCountCallback, this, _1));
   motorControlCmdSub = this->create_subscription<HalMotorControlCommandMsg_t>(
-    "wheelsVelocityCmd", 10, std::bind(&MotorControl::wheelsVelocityCmdCallback, this, _1));
+    "cmd_torque", 10, std::bind(&MotorControl::wheelsCmdCallback, this, _1));
 
   encoderCountsTimer = create_wall_timer(10ms, std::bind(&MotorControl::publishMessage, this));
 
@@ -140,23 +140,24 @@ void MotorControl::pigpioEncoderCountCallback(
   }
 }
 
-void MotorControl::wheelsVelocityCmdCallback(const HalMotorControlCommandMsg_t & msg)
+void MotorControl::wheelsCmdCallback(const HalMotorControlCommandMsg_t & msg)
 {
+  float leftVoltage = std::abs(msg.motor_left_command) * torque_to_voltage + Ke * 0.0;
+  float rightVoltage = std::abs(msg.motor_right_command) * torque_to_voltage + Ke * 0.0;
+
+  RCLCPP_INFO(get_logger(), "Left voltage: %f, right voltage: %f", leftVoltage, rightVoltage);
+
   uint16_t leftPwmDutycycle =
-    static_cast<uint16_t>(std::abs(msg.motor_left_command) * torque_to_dutycycle);
+    static_cast<uint16_t>(leftVoltage * voltage_to_dutycycle);
   if (leftPwmDutycycle >= 256) {
     leftPwmDutycycle = 255;
   }
 
   uint16_t rightPwmDutycycle =
-    static_cast<uint16_t>(std::abs(msg.motor_right_command) * torque_to_dutycycle);
+    static_cast<uint16_t>(rightVoltage * voltage_to_dutycycle);
   if (rightPwmDutycycle >= 256) {
     rightPwmDutycycle = 255;
   }
-
-  RCLCPP_INFO(
-    get_logger(), "Right dutycycle: %d, left dutycycle: %d", rightPwmDutycycle,
-    leftPwmDutycycle);
 
   auto leftDirection = forward;
   auto rightDirection = forward;

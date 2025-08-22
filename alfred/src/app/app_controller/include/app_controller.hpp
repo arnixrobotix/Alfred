@@ -21,7 +21,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "geometry_msgs/msg/twist_with_covariance.hpp"
 #include "geometry_msgs/msg/pose_with_covariance.hpp"
-#include "geometry_msgs/msg/wrench.hpp"
+#include "hal_motor_control_interfaces/msg/hal_motor_control_command.hpp"
 
 namespace app
 {
@@ -29,16 +29,13 @@ namespace controller
 {
 
 using OdometryMsg_t = nav_msgs::msg::Odometry;
-using WrenchMsg_t = geometry_msgs::msg::Wrench;
+using HalMotorControlCommandMsg_t = hal_motor_control_interfaces::msg::HalMotorControlCommand;
 
 class Controller : public rclcpp_lifecycle::LifecycleNode
 {
 private:
   rclcpp::Subscription<OdometryMsg_t>::SharedPtr odometrySubscriber;
-  rclcpp_lifecycle::LifecyclePublisher<WrenchMsg_t>::SharedPtr commandPublisher;
-
-  float previousCommand;
-  float previousError;
+  rclcpp_lifecycle::LifecyclePublisher<HalMotorControlCommandMsg_t>::SharedPtr commandPublisher;
 
 public:
   Controller();
@@ -53,6 +50,7 @@ public:
 
   void odometryReader(const OdometryMsg_t & msg);
   void computeAndPublishCommand(double angle);
+  void computeAndPublishCommand(double angle, double heading, double distance);
 };
 
 }  // namespace controller

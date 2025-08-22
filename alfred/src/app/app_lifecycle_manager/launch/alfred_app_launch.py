@@ -28,7 +28,7 @@ def generate_launch_description():
 
     app_controller_node = launch_ros.actions.LifecycleNode(
         name='app_controller', namespace='',
-        package='app_controller', executable='app_controller_node', output='screen')
+        package='app_controller', executable='app_controller_stabilisation_node', output='screen')
 
     register_event_handler_for_app_controller_reaches_configure_state = \
         launch.actions.RegisterEventHandler(
