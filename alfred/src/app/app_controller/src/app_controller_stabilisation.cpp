@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "app_controller.hpp"
+#include <cmath>
 
 using namespace std::placeholders;
 
@@ -106,9 +107,11 @@ void Controller::odometryReader(const OdometryMsg_t & msg)
   float quadrantYaw = 2 * (quaternion.w * quaternion.w + quaternion.x * quaternion.x) - 1;
   auto yaw = std::atan2(tanYaw, quadrantYaw);
 
+  /*
   RCLCPP_INFO(
     get_logger(), "Pitch: %f, Roll: %f, Yaw: %f", pitch * 180 / M_PI, roll * 180 / M_PI,
     yaw * 180 / M_PI);
+  */
 
   computeAndPublishCommand(pitch);
 }
@@ -117,22 +120,13 @@ void Controller::computeAndPublishCommand(double angle)
 {
   HalMotorControlCommandMsg_t command;
 
-  // Observer
-  static float theta_obs_prev = 0.0;
-  static float theta_dot_obs_prev = 0.0;
+  static float theta_prev = 0.0;
   static float theta_error_sum = 0.0;
-  static float torque_prev = 0.0;
 
-  float theta_obs = -0.7758 * theta_obs_prev + 0.002784 * theta_dot_obs_prev - 0.03122 *
-    torque_prev + 1.0812 * angle;
-  float theta_dot_obs = -45.5195 * theta_obs_prev + 0.6344 * theta_dot_obs_prev - 11.8724 *
-    torque_prev + 46.9097 * angle;
+  float velocity = std::abs(theta_prev - angle) / 0.01;
+
   theta_error_sum -= angle;
-  float torque = 0.46837 * theta_obs + 0.02747 * theta_dot_obs + 1.4972 * theta_error_sum * 0.01;
-
-  theta_obs_prev = theta_obs;
-  theta_dot_obs_prev = theta_dot_obs;
-  torque_prev = torque;
+  float torque = 4.2153 * angle + 0.10073 * velocity + 37.4306 * theta_error_sum * 0.01;
 
   command.motor_left_command = torque / 2.0;
   command.motor_right_command = torque / 2.0;

@@ -74,6 +74,7 @@ public:
     setEncoderCallbackSyncClientNode_t gpioSetEncoderCallbackClient,
     setPwmFrequencySyncClientNode_t gpioSetPwmFrequencyClient);
   uint8_t getId(void);
+  float computeVoltage(float torque);
 };
 
 }  // namespace motor

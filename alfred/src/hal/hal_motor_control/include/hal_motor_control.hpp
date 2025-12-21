@@ -51,6 +51,10 @@ private:
   rclcpp::Subscription<HalMotorControlCommandMsg_t>::SharedPtr motorControlCmdSub;
 
   rclcpp::TimerBase::SharedPtr encoderCountsTimer;
+  rclcpp::TimerBase::SharedPtr motorTorqueTimer;
+
+  float rightTorque;
+  float leftTorque;
 
 public:
   MotorControl();
@@ -66,6 +70,7 @@ public:
   void activatePublisher(void);
   void configureMotors(void);
   void publishMessage(void);
+  void torqueControl(void);
   void pigpioEncoderCountCallback(const HalPigpioEncoderCountMsg_t & msg);
   void wheelsCmdCallback(const HalMotorControlCommandMsg_t & msg);
   void setPwmLeft(uint8_t dutycycle, Direction direction);

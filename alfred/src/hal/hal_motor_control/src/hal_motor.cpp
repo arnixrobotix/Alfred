@@ -171,5 +171,47 @@ uint8_t Motor::getId(void)
   return id;
 }
 
+float Motor::computeVoltage(float torque)
+{
+  static float torqueObs_prev = 0.0;
+  static float velocityObs_prev = 0.0;
+  static float voltage_prev = 0.0;
+  static int32_t encoderCount_prev = 0;
+  float voltage = 0.0;
+
+  float velocity = (encoder.encoderCount - encoderCount_prev) * encoder_to_rad * 1000.0; // rad/s
+
+  // Observer
+  float torque_obs = 0.0042 * torqueObs_prev - 0.0009 * velocityObs_prev + 0.6201 * voltage_prev - 6.339 * velocity;
+  float velocity_obs = 0.0146 * torqueObs_prev - 0.003 * velocityObs_prev + 1.1189 * voltage_prev - 11.4375 * velocity;
+
+  float voltageNum = -0.00055 * torque_obs * torque_obs + 26.1253 * torque_obs - 0.0122;
+  float voltageDen = torque_obs * (torque_obs - 1) + 0.0004;
+
+  if (voltageDen != 0.0)
+  {
+    voltage = voltageNum / voltageDen;
+
+    if (voltage > Vbat)
+    {
+      voltage = Vbat;
+    }
+  }
+  else if (voltageNum == 0.0)
+  {
+    voltage = 0.0;
+  }
+  else
+  {
+    voltage = Vbat;
+  }
+
+  torqueObs_prev = torque_obs;
+  velocityObs_prev = velocity_obs;
+  voltage_prev = voltage;
+  
+  return std::abs(voltage);
+}
+
 }  // namespace motor
 }  // namespace hal

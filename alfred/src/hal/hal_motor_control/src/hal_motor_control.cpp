@@ -36,7 +36,9 @@ MotorControl::MotorControl()
   setPullUpSyncClient{"setPullUpSyncClientMotor_node"},
   setOutputModeSyncClient{"setOutputModeSyncClientMotor_node"},
   setEncoderCallbackSyncClient{"setEncoderCallbackSyncClientMotor_node"},
-  setPwmFrequencySyncClient{"setPwmFrequencySyncClientMotor_node"}
+  setPwmFrequencySyncClient{"setPwmFrequencySyncClientMotor_node"},
+  rightTorque{0.0},
+  leftTorque{0.0}
 {
 }
 
@@ -60,6 +62,8 @@ LifecycleCallbackReturn_t MotorControl::on_configure(const rclcpp_lifecycle::Sta
     "cmd_torque", 10, std::bind(&MotorControl::wheelsCmdCallback, this, _1));
 
   encoderCountsTimer = create_wall_timer(10ms, std::bind(&MotorControl::publishMessage, this));
+
+  motorTorqueTimer = create_wall_timer(1ms, std::bind(&MotorControl::torqueControl, this));
 
   RCLCPP_INFO(get_logger(), "Node configured!");
 
@@ -90,6 +94,7 @@ LifecycleCallbackReturn_t MotorControl::on_cleanup(const rclcpp_lifecycle::State
 {
   motorControlPub.reset();
   encoderCountsTimer.reset();
+  motorTorqueTimer.reset();
 
   RCLCPP_INFO(get_logger(), "Node unconfigured!");
 
@@ -100,6 +105,7 @@ LifecycleCallbackReturn_t MotorControl::on_shutdown(const rclcpp_lifecycle::Stat
 {
   motorControlPub.reset();
   encoderCountsTimer.reset();
+  motorTorqueTimer.reset();
 
   RCLCPP_INFO(get_logger(), "Node shutdown!");
 
@@ -140,18 +146,21 @@ void MotorControl::pigpioEncoderCountCallback(
   }
 }
 
-void MotorControl::wheelsCmdCallback(const HalMotorControlCommandMsg_t & msg)
+void MotorControl::torqueControl(void)
 {
-  float leftVoltage = std::abs(msg.motor_left_command) * torque_to_voltage + Ke * 0.0;
-  float rightVoltage = std::abs(msg.motor_right_command) * torque_to_voltage + Ke * 0.0;
+  float leftVoltage = motorLeft.computeVoltage(leftTorque);
+  float rightVoltage = motorRight.computeVoltage(rightTorque);
 
-  RCLCPP_INFO(get_logger(), "Left voltage: %f, right voltage: %f", leftVoltage, rightVoltage);
+  RCLCPP_INFO(get_logger(), "Voltage value: %f", leftVoltage);
 
   uint16_t leftPwmDutycycle =
-    static_cast<uint16_t>(leftVoltage * voltage_to_dutycycle);
+  static_cast<uint16_t>(leftVoltage * voltage_to_dutycycle);
   if (leftPwmDutycycle >= 256) {
     leftPwmDutycycle = 255;
   }
+  
+  RCLCPP_INFO(get_logger(), "PWM value: %d", leftPwmDutycycle);
+
 
   uint16_t rightPwmDutycycle =
     static_cast<uint16_t>(rightVoltage * voltage_to_dutycycle);
@@ -162,16 +171,22 @@ void MotorControl::wheelsCmdCallback(const HalMotorControlCommandMsg_t & msg)
   auto leftDirection = forward;
   auto rightDirection = forward;
 
-  if (msg.motor_left_command < 0.0) {
+  if (leftTorque < 0.0) {
     leftDirection = backward;
   }
 
-  if (msg.motor_right_command < 0.0) {
+  if (rightTorque < 0.0) {
     rightDirection = backward;
   }
 
   setPwmLeft(static_cast<uint8_t>(leftPwmDutycycle), leftDirection);
   setPwmRight(static_cast<uint8_t>(rightPwmDutycycle), rightDirection);
+}
+
+void MotorControl::wheelsCmdCallback(const HalMotorControlCommandMsg_t & msg)
+{
+  rightTorque = msg.motor_right_command;
+  leftTorque = msg.motor_left_command;
 }
 
 void MotorControl::publishMessage(void)

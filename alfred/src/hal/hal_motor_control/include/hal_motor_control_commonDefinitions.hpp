@@ -16,6 +16,7 @@
 #define HAL_MOTOR_CONTROL_COMMONDEFINITIONS_HPP_
 
 #include "common.hpp"
+#include <cmath>
 
 // Services and messages headers (generated)
 #include "hal_motor_control_interfaces/msg/hal_motor_control_encoders.hpp"
@@ -47,12 +48,8 @@ namespace motor
 
 #define MOTOR_PWM_FREQUENCY 10000
 
-constexpr float Kc = 0.344;  // Nm/A
-constexpr float R = 21;  // Ohms
-constexpr float Vbat = 14.8;  // V
-constexpr float omega_nom = 30.89;  // rad/s
-constexpr float Ke = Vbat / omega_nom;  // V/(rad/s)
-constexpr float torque_to_voltage = R / Kc;
+constexpr float encoder_to_rad = (2 * M_PI) / 48960;
+constexpr float Vbat = 16.0;
 constexpr float voltage_to_dutycycle = 255 / Vbat;
 
 using HalMotorControlEncodersMsg_t = hal_motor_control_interfaces::msg::HalMotorControlEncoders;
