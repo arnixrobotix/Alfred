@@ -17,6 +17,8 @@
 
 #include "hal_motor_control_commonDefinitions.hpp"
 
+constexpr float epsilon = 0.001;
+
 namespace hal
 {
 namespace motor

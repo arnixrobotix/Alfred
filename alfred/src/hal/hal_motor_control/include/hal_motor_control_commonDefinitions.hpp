@@ -15,8 +15,9 @@
 #ifndef HAL_MOTOR_CONTROL_COMMONDEFINITIONS_HPP_
 #define HAL_MOTOR_CONTROL_COMMONDEFINITIONS_HPP_
 
-#include "common.hpp"
 #include <cmath>
+
+#include "common.hpp"
 
 // Services and messages headers (generated)
 #include "hal_motor_control_interfaces/msg/hal_motor_control_encoders.hpp"

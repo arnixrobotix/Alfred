@@ -154,13 +154,12 @@ void MotorControl::torqueControl(void)
   RCLCPP_INFO(get_logger(), "Voltage value: %f", leftVoltage);
 
   uint16_t leftPwmDutycycle =
-  static_cast<uint16_t>(leftVoltage * voltage_to_dutycycle);
+    static_cast<uint16_t>(leftVoltage * voltage_to_dutycycle);
   if (leftPwmDutycycle >= 256) {
     leftPwmDutycycle = 255;
   }
-  
-  RCLCPP_INFO(get_logger(), "PWM value: %d", leftPwmDutycycle);
 
+  RCLCPP_INFO(get_logger(), "PWM value: %d", leftPwmDutycycle);
 
   uint16_t rightPwmDutycycle =
     static_cast<uint16_t>(rightVoltage * voltage_to_dutycycle);
