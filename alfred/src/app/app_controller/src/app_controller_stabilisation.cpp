@@ -120,13 +120,13 @@ void Controller::computeAndPublishCommand(double angle)
 {
   HalMotorControlCommandMsg_t command;
 
-  static float theta_prev = 0.0;
-  static float theta_error_sum = 0.0;
+  static float angle_prev = 0.0;
+  static float angle_error_sum = 0.0;
 
-  float velocity = std::abs(theta_prev - angle) / 0.01;
+  float velocity = (angle - angle_prev) / 0.01;
 
-  theta_error_sum -= angle;
-  float torque = 4.2153 * angle + 0.10073 * velocity + 37.4306 * theta_error_sum * 0.01;
+  angle_error_sum -= angle;
+  float torque = 4.2153 * angle + 0.10073 * velocity + 37.4306 * angle_error_sum * 0.01;
 
   command.motor_left_command = torque / 2.0;
   command.motor_right_command = torque / 2.0;
