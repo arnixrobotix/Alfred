@@ -86,6 +86,11 @@ enum class EdgeChangeType
   undefined
 };
 
+template<class T>
+inline bool AreEqual(T a, T b, T epsilon)
+{
+  return std::fabs(a - b) < epsilon;
+}
 
 using LifecycleCallbackReturn_t =
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
